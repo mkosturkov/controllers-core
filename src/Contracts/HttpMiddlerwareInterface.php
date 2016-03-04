@@ -1,12 +1,14 @@
 <?php
 
-namespace Tys\Controllers;
+namespace Tys\Controllers\Contracts;
+
+use \Tys\Controllers\HttpController;
 
 /**
  * Middleware objects that are to be used
  * in the HttpController must implement this interface.
  * 
- * @author Milko Kosturkov
+ * @author Milko Kosturkov <mkosturkov@gmail.com>
  */
 interface HttpMiddlerwareInterface
 {
