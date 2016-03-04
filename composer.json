@@ -1,6 +1,6 @@
 {
-    "name": "tys/web-interface",
-    "description": "Provides simple web-interface framework",
+    "name": "tys/controllers",
+    "description": "Provides simple controller framework",
     "license": "GPL-3.0+",
     "authors": [
         {
