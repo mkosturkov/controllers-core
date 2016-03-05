@@ -2,6 +2,7 @@
 
 namespace Tys\Controllers;
 
+use \Tys\Controllers\Contracts\MiddlewareInterface;
 use \Interop\Container\ContainerInterface;
 
 /**
@@ -45,12 +46,21 @@ abstract class Controller
     protected $stopFlag = false;
     
     /**
+     * @param ContainerInterface $dic A Dependancy Injection Container
+     */
+    public function __construct(ContainerInterface $dic)
+    {
+        $this->dic = $dic;
+        $this->queue = new UseOnceQueue();
+    }
+    
+    /**
      * Prepend middleware to execution queue
      * 
-     * @param mixed $middleware
-     * @return \Tys\Controllers\Controller
+     * @param MiddlewareInterface $middleware
+     * @return Controller
      */
-    protected function prependMiddleware($middleware)
+    public function prependMiddleware(MiddlewareInterface $middleware)
     {
         $this->queue->prependItem($middleware);
         return $this;
@@ -59,22 +69,13 @@ abstract class Controller
     /**
      * Append middleware to exection queue
      * 
-     * @param mixed $middleware
-     * @return \Tys\Controllers\Controller
+     * @param MiddlewareInterface $middleware
+     * @return Controller
      */
-    protected function appendMiddleware($middleware)
+    public function appendMiddleware(MiddlewareInterface $middleware)
     {
         $this->queue->appendItem($middleware);
         return $this;
-    }
-    
-    /**
-     * @param ContainerInterface $dic A Dependancy Injection Container
-     */
-    public function __construct(ContainerInterface $dic)
-    {
-        $this->dic = $dic;
-        $this->queue = new UseOnceQueue();
     }
     
     /**

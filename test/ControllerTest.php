@@ -18,9 +18,7 @@ class ControllerTest extends PHPUnit_Framework_TestCase
 
     private function makeRunnable()
     {
-        return $this->getMockBuilder('Runnable')
-                    ->setMethods(['run'])
-                    ->getMock();
+        return $this->getMock(Tys\Controllers\Contracts\MiddlewareInterface::class);
     }
     
     public function setUp()
