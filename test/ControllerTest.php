@@ -10,8 +10,7 @@ use \Interop\Container\ContainerInterface;
  */
 class ControllerTest extends PHPUnit_Framework_TestCase
 {
-    use TestHelpersTrait;
-    
+
     private $dicStub;
     
     private $controller;
@@ -24,7 +23,7 @@ class ControllerTest extends PHPUnit_Framework_TestCase
     public function setUp()
     {
         $this->dicStub = $this->getMock(ContainerInterface::class);
-        $this->controller = $this->getMockForAbstractClass(Controller::class, [$this->dicStub]);
+        $this->controller = new Controller($this->dicStub);
     }
     
     private function checkPrependAppendExecutionOrder($append)
@@ -45,7 +44,7 @@ class ControllerTest extends PHPUnit_Framework_TestCase
             ->will($this->returnCallback(function () use (&$execOrder) {
                 $execOrder[] = 'first';
             }));
-        $returnValue = $this->invokeUnaccessableMethod($this->controller, $method, $middleware);
+        $returnValue = $this->controller->$method($middleware);
         $this->assertSame($this->controller, $returnValue);
         
         $middleware = $this->makeRunnable();
@@ -55,7 +54,7 @@ class ControllerTest extends PHPUnit_Framework_TestCase
             ->will($this->returnCallback(function() use (&$execOrder) {
                 $execOrder[] = 'second';
             }));
-        $this->invokeUnaccessableMethod($this->controller, $method, $middleware);
+        $this->controller->$method($middleware);
         
         $this->controller->run();
         $this->assertEquals($expectedOrder, $execOrder);
@@ -77,7 +76,7 @@ class ControllerTest extends PHPUnit_Framework_TestCase
         $middleware->expects($this->once())
             ->method('run')
             ->willReturn('test runned');
-        $this->invokeUnaccessableMethod($this->controller, 'appendMiddleware', $middleware);
+        $this->controller->appendMiddleware($middleware);
         $this->controller->run();
         $this->assertEquals('test runned', $this->controller->getLastReturnValue());
     }
@@ -90,11 +89,11 @@ class ControllerTest extends PHPUnit_Framework_TestCase
             ->will($this->returnCallback(function ($controller) {
                 $controller->stop();
             }));
-        $this->invokeUnaccessableMethod($this->controller, 'appendMiddleware', $middleware);
+        $this->controller->appendMiddleware($middleware);
         $middleware = $this->makeRunnable();
         $middleware->expects($this->never())
             ->method('run');
-        $this->invokeUnaccessableMethod($this->controller, 'appendMiddleware', $middleware);
+        $this->controller->appendMiddleware($middleware);
         $this->controller->run();
     }
     

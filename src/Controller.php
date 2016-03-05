@@ -11,7 +11,7 @@ use \Interop\Container\ContainerInterface;
  *
  * @author Milko Kosturkov <mkosturkov@gmail.com>
  */
-abstract class Controller
+class Controller
 {
 
     /**
