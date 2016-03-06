@@ -10,12 +10,15 @@ use \Tys\Controllers\HttpController;
  * 
  * @author Milko Kosturkov <mkosturkov@gmail.com>
  */
-interface HttpMiddlerwareInterface extends MiddlewareInterface
+interface HttpMiddlerwareInterface
 {
 
     /**
-     * {@inheritdoc}
+     * This method will be called when the middleware is fired.
+     * 
+     * @param HttpController $controller The controller instance running
+     * @return mixed
      */
-    public function run(HttpController $controller);
+    public function httpRun(HttpController $controller);
 
 }

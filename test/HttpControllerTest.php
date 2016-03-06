@@ -1,6 +1,7 @@
 <?php
 
 use \Tys\Controllers\Exceptions\ResponseNotSetException;
+use \Tys\Controllers\Contracts\HttpMiddlerwareInterface;
 use \Tys\Controllers\HttpController;
 use \Interop\Container\ContainerInterface;
 use \Psr\Http\Message\RequestInterface;
@@ -11,7 +12,7 @@ use \Psr\Http\Message\ResponseInterface;
  *
  * @author Milko Kosturkov <mkosturkov@gmail.com>
  */
-class HttpControllerTest extends PHPUnit_Framework_TestCase
+class HttpControllerTest extends ControllerTestCase
 {
 
     private $requestStub;
@@ -43,6 +44,17 @@ class HttpControllerTest extends PHPUnit_Framework_TestCase
     {
         $this->expectException(ResponseNotSetException::class);
         $this->controller->getResponse();
+    }
+    
+    public function testAppendHttpMiddleware()
+    {
+        $this->checkRunAndRunOrder(
+            $this->controller,
+            'appendHttpMiddleware',
+            HttpMiddlerwareInterface::class,
+            'httpRun',
+            false
+        );
     }
     
 }

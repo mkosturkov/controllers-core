@@ -30,6 +30,8 @@ class HttpController extends Controller
      */
     private $response;
     
+    protected $middlewareRunMethod = 'httpRun';
+
     /**
      * @param ContainerInterface $dic A DIC implementation
      * @param RequestInterface $request A PSR-7 compliant request implementation
@@ -41,25 +43,27 @@ class HttpController extends Controller
     }
     
     /**
-     * Append middleware to the end of the middleware queue
+     * Append http middleware to the end of the middleware queue
      * 
-     * @param \Tys\Controllers\HttpMiddlerwareInterface $middleware
+     * @param HttpMiddlerwareInterface $middleware
      * @return self
      */
-    public function appendMiddleware(HttpMiddlerwareInterface $middleware)
+    public function appendHttpMiddleware(HttpMiddlerwareInterface $middleware)
     {
-        return parent::appendMiddleware($middleware);
+        $this->queue->appendItem($middleware);
+        return $this;
     }
     
     /**
-     * Prepend middleware to the beggining of the middleware queue
+     * Prepend http middleware to the beggining of the middleware queue
      * 
-     * @param \Tys\Controllers\HttpMiddlerwareInterface $middleware
+     * @param HttpMiddlerwareInterface $middleware
      * @return self
      */
-    public function prependMiddleware(HttpMiddlerwareInterface $middleware)
+    public function prependHttpMiddleware(HttpMiddlerwareInterface $middleware)
     {
-        return parent::prependMiddleware($middleware);
+        $this->queue->prependItem($middleware);
+        return $this;
     }
     
     /**
