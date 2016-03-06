@@ -19,7 +19,7 @@ class Controller
      * 
      * @var UseOnceQueue
      */
-    private $queue;
+    protected $queue;
     
     /**
      * Dependancy injection container
@@ -27,7 +27,6 @@ class Controller
      * @var ContainerInterface
      */
     protected $dic;
-
 
     /**
      * Holds the return value
@@ -45,6 +44,13 @@ class Controller
      */
     protected $stopFlag = false;
     
+    /**
+     * The name of the method to call on middleware
+     * 
+     * @var string
+     */
+    protected $middlewareRunMethod = 'run';
+
     /**
      * @param ContainerInterface $dic A Dependancy Injection Container
      */
@@ -84,7 +90,7 @@ class Controller
     public function run()
     {
         while (!$this->stopFlag && $this->queue->hasNext()) {
-            $this->lastReturnValue = $this->queue->getNextItem()->run($this);
+            $this->lastReturnValue = $this->queue->getNextItem()->{$this->middlewareRunMethod}($this);
         }
     }
     

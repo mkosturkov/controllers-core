@@ -1,5 +1,6 @@
 <?php
 
+use \Tys\Controllers\Contracts\MiddlewareInterface;
 use \Tys\Controllers\Controller;
 use \Interop\Container\ContainerInterface;
 
@@ -8,7 +9,7 @@ use \Interop\Container\ContainerInterface;
  *
  * @author Milko Kosturkov <mkosturkov@gmail.com>
  */
-class ControllerTest extends PHPUnit_Framework_TestCase
+class ControllerTest extends ControllerTestCase
 {
 
     private $dicStub;
@@ -17,7 +18,7 @@ class ControllerTest extends PHPUnit_Framework_TestCase
 
     private function makeRunnable()
     {
-        return $this->getMock(Tys\Controllers\Contracts\MiddlewareInterface::class);
+        return $this->getMock(MiddlewareInterface::class);
     }
     
     public function setUp()
@@ -26,48 +27,26 @@ class ControllerTest extends PHPUnit_Framework_TestCase
         $this->controller = new Controller($this->dicStub);
     }
     
-    private function checkPrependAppendExecutionOrder($append)
+    public function testAppendMiddleware()
     {
-        $execOrder = [];
-        if ($append) {
-            $expectedOrder = ['first', 'second'];
-            $method = 'appendMiddleware';
-        } else {
-            $expectedOrder = ['second', 'first'];
-            $method = 'prependMiddleware';
-        }
-        
-        $middleware = $this->makeRunnable();
-        $middleware->expects($this->once())
-            ->method('run')
-            ->with($this->controller)
-            ->will($this->returnCallback(function () use (&$execOrder) {
-                $execOrder[] = 'first';
-            }));
-        $returnValue = $this->controller->$method($middleware);
-        $this->assertSame($this->controller, $returnValue);
-        
-        $middleware = $this->makeRunnable();
-        $middleware->expects($this->once())
-            ->method('run')
-            ->with($this->controller)
-            ->will($this->returnCallback(function() use (&$execOrder) {
-                $execOrder[] = 'second';
-            }));
-        $this->controller->$method($middleware);
-        
-        $this->controller->run();
-        $this->assertEquals($expectedOrder, $execOrder);
-    }
-    
-     public function testAppendMiddleware()
-    {
-        $this->checkPrependAppendExecutionOrder(true);
+        $this->checkRunAndRunOrder(
+            $this->controller,
+            'appendMiddleware',
+            MiddlewareInterface::class,
+            'run',
+            false
+        );
     }
     
     public function testPrependMiddleware()
     {
-        $this->checkPrependAppendExecutionOrder(false);
+        $this->checkRunAndRunOrder(
+            $this->controller,
+            'prependMiddleware',
+            MiddlewareInterface::class,
+            'run',
+            true
+        );
     }
     
     public function testLastValue()
@@ -101,4 +80,5 @@ class ControllerTest extends PHPUnit_Framework_TestCase
     {
         $this->assertSame($this->dicStub, $this->controller->getDIC());
     }
+    
 }
