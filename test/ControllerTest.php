@@ -32,9 +32,9 @@ class ControllerTest extends ControllerTestCase
         $this->checkRunAndRunOrder(
             $this->controller,
             'appendMiddleware',
+            false,
             MiddlewareInterface::class,
-            'run',
-            false
+            'run'
         );
     }
     
@@ -43,9 +43,9 @@ class ControllerTest extends ControllerTestCase
         $this->checkRunAndRunOrder(
             $this->controller,
             'prependMiddleware',
+            true,
             MiddlewareInterface::class,
-            'run',
-            true
+            'run'
         );
     }
     

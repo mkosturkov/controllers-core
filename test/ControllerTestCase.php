@@ -11,23 +11,28 @@ abstract class ControllerTestCase extends PHPUnit_Framework_TestCase
     protected function checkRunAndRunOrder(
         $controller,
         $controllerMethodName,
+        $reversed,
         $middlewareName,
-        $middlewareMethodName,
-        $reversed
+        $middlewareMethodName = null
     )
     {
         $execOrder = [];
         $expectedOrder = ['first', 'second'];
         
         foreach ($expectedOrder as $item) {
-            $middleware = $this->getMock($middlewareName);
-            $middleware->expects($this->once())
-                ->method($middlewareMethodName)
-                ->with($controller)
-                ->will($this->returnCallback(function () use (&$execOrder, $item) {
-                    $execOrder[] = $item;
-                }));
-            $returnValue = $controller->$controllerMethodName($middleware);
+            $callback = function () use (&$execOrder, $item) {
+                $execOrder[] = $item;
+            };
+            if ($middlewareMethodName) {
+                $middleware = $this->getMock($middlewareName);
+                $middleware->expects($this->once())
+                    ->method($middlewareMethodName)
+                    ->with($controller)
+                    ->will($this->returnCallback($callback));
+                $returnValue = $controller->$controllerMethodName($middleware);
+            } else {
+                $returnValue = $controller->$controllerMethodName($callback);
+            }
             $this->assertSame($controller, $returnValue);
         }
         

@@ -51,9 +51,9 @@ class HttpControllerTest extends ControllerTestCase
         $this->checkRunAndRunOrder(
             $this->controller,
             'appendHttpMiddleware',
+            false,
             HttpMiddlerwareInterface::class,
-            'httpRun',
-            false
+            'httpRun'
         );
     }
     
