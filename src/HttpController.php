@@ -29,8 +29,6 @@ class HttpController extends Controller
      * @var ResponseInterface
      */
     private $response;
-    
-    protected $middlewareRunMethod = 'httpRun';
 
     /**
      * @param ContainerInterface $dic A DIC implementation
@@ -50,8 +48,7 @@ class HttpController extends Controller
      */
     public function appendHttpMiddleware(HttpMiddlerwareInterface $middleware)
     {
-        $this->queue->appendItem($middleware);
-        return $this;
+        return $this->appendCallback([$middleware, 'httpRun']);
     }
     
     /**
@@ -62,8 +59,7 @@ class HttpController extends Controller
      */
     public function prependHttpMiddleware(HttpMiddlerwareInterface $middleware)
     {
-        $this->queue->prependItem($middleware);
-        return $this;
+        return $this->prependCallback([$middleware, 'httpRun']);
     }
     
     /**

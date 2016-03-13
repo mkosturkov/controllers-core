@@ -27,6 +27,16 @@ class ControllerTest extends ControllerTestCase
         $this->controller = new Controller($this->dicStub);
     }
     
+    public function testAppendCallback()
+    {
+        $this->checkRunAndRunOrder($this->controller, 'appendCallback', false);
+    }
+    
+    public function testPrependCallback()
+    {
+        $this->checkRunAndRunOrder($this->controller, 'prependCallback', true);
+    }
+    
     public function testAppendMiddleware()
     {
         $this->checkRunAndRunOrder(

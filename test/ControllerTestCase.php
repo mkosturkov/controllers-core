@@ -12,7 +12,7 @@ abstract class ControllerTestCase extends PHPUnit_Framework_TestCase
         $controller,
         $controllerMethodName,
         $reversed,
-        $middlewareName,
+        $middlewareName = null,
         $middlewareMethodName = null
     )
     {

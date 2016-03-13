@@ -19,14 +19,14 @@ class Controller
      * 
      * @var UseOnceQueue
      */
-    protected $queue;
+    private $queue;
     
     /**
      * Dependancy injection container
      * 
      * @var ContainerInterface
      */
-    protected $dic;
+    private $dic;
 
     /**
      * Holds the return value
@@ -34,7 +34,7 @@ class Controller
      * 
      * @var mixed
      */
-    protected $lastReturnValue;
+    private $lastReturnValue;
     
     /**
      * Flag to indicate that the stop method
@@ -42,14 +42,7 @@ class Controller
      * 
      * @var bool
      */
-    protected $stopFlag = false;
-    
-    /**
-     * The name of the method to call on middleware
-     * 
-     * @var string
-     */
-    protected $middlewareRunMethod = 'run';
+    private $stopFlag = false;
 
     /**
      * @param ContainerInterface $dic A Dependancy Injection Container
@@ -61,6 +54,30 @@ class Controller
     }
     
     /**
+     * Prepend a callback to the execution queue
+     * 
+     * @param \callable $callback
+     * @return \Tys\Controllers\Controller Returns self
+     */
+    public function prependCallback(callable $callback)
+    {
+        $this->queue->prependItem($callback);
+        return $this;
+    }
+    
+    /**
+     * Append a callback to the execution queue
+     * 
+     * @param \callable $callback
+     * @return \Tys\Controllers\Controller Returns self
+     */
+    public function appendCallback(callable $callback)
+    {
+        $this->queue->appendItem($callback);
+        return $this;
+    }
+    
+    /**
      * Prepend middleware to execution queue
      * 
      * @param MiddlewareInterface $middleware
@@ -68,8 +85,7 @@ class Controller
      */
     public function prependMiddleware(MiddlewareInterface $middleware)
     {
-        $this->queue->prependItem($middleware);
-        return $this;
+        return $this->prependCallback([$middleware, 'run']);
     }
     
     /**
@@ -80,8 +96,7 @@ class Controller
      */
     public function appendMiddleware(MiddlewareInterface $middleware)
     {
-        $this->queue->appendItem($middleware);
-        return $this;
+        return $this->appendCallback([$middleware, 'run']);
     }
     
     /**
@@ -90,7 +105,8 @@ class Controller
     public function run()
     {
         while (!$this->stopFlag && $this->queue->hasNext()) {
-            $this->lastReturnValue = $this->queue->getNextItem()->{$this->middlewareRunMethod}($this);
+            $callback = $this->queue->getNextItem();
+            $this->lastReturnValue = $callback($this);
         }
     }
     
