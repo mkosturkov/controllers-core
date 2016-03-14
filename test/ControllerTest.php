@@ -100,6 +100,13 @@ class ControllerTest extends ControllerTestCase
         $this->controller->run();
     }
     
+    public function testExceptionHandlerSetterReturningSelf()
+    {
+        $this->assertSame($this->controller, $this->controller->setExceptionHandlerCallback(Exception::class, function() {
+            
+        }));
+    }
+    
     public function testExceptionHandlerBeingTriggered()
     {
         $thrown = new Exception();
