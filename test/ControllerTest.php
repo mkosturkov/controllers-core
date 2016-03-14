@@ -91,4 +91,76 @@ class ControllerTest extends ControllerTestCase
         $this->assertSame($this->dicStub, $this->controller->getDIC());
     }
     
+    public function testUnhandledException()
+    {
+        $this->controller->appendCallback(function() {
+            throw new Exception();
+        });
+        $this->expectException(Exception::class);
+        $this->controller->run();
+    }
+    
+    public function testExceptionHandlerBeingTriggered()
+    {
+        $thrown = new Exception();
+        $this->controller->appendCallback(function() use ($thrown) {
+            throw $thrown;
+        });
+        $cought = null;
+        $this->controller->setExceptionHandlerCallback(Exception::class, function(Exception $e) use (&$cought) {
+            $cought = $e;
+        });
+        $this->controller->run();
+        $this->assertSame($thrown, $cought);
+    }
+    
+    public function testExceptionHandlersForExceptionTypes()
+    {
+        $fe = function() {
+            throw new Exception();
+        };
+        $fre = function() {
+            throw new RuntimeException();
+        };
+        $fie = function() {
+            throw new InvalidArgumentException();
+        };
+        $coughtBy = false;
+        $this->controller->setExceptionHandlerCallback(InvalidArgumentException::class, function() use (&$coughtBy) {
+            $coughtBy = 'invalid-argument-handler';
+        });
+        
+        $this->controller->setExceptionHandlerCallback(Exception::class, function() use (&$coughtBy) {
+            $coughtBy = 'exception-handler';
+        });
+        
+        $this->controller->appendCallback($fe);
+        $this->controller->run();
+        $this->assertEquals('exception-handler', $coughtBy);
+        
+        $this->controller->appendCallback($fre);
+        $this->controller->run();
+        $this->assertEquals('exception-handler', $coughtBy);
+        
+        $this->controller->appendCallback($fie);
+        $this->controller->run();
+        $this->assertEquals('invalid-argument-handler', $coughtBy);
+    }
+    
+    public function testExceptionHandlersPriority()
+    {
+        $coughtBy = false;
+        $this->controller->setExceptionHandlerCallback(Exception::class, function() use (&$coughtBy) {
+            $coughtBy = 'exception-handler';
+        });
+        $this->controller->setExceptionHandlerCallback(InvalidArgumentException::class, function() use (&$coughtBy) {
+            $coughtBy = 'invalid-argument';
+        });
+        $this->controller->appendCallback(function() {
+            throw new InvalidArgumentException();
+        });
+        $this->controller->run();
+        $this->assertEquals('exception-handler', $coughtBy);
+    }
+    
 }

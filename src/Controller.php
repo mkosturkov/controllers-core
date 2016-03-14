@@ -22,6 +22,13 @@ class Controller
     private $queue;
     
     /**
+     * Exception handlers map
+     * 
+     * @var array
+     */
+    private $exceptionHandlers = [];
+    
+    /**
      * Dependancy injection container
      * 
      * @var ContainerInterface
@@ -104,9 +111,23 @@ class Controller
      */
     public function run()
     {
-        while (!$this->stopFlag && $this->queue->hasNext()) {
-            $callback = $this->queue->getNextItem();
-            $this->lastReturnValue = $callback($this);
+        try {
+            while (!$this->stopFlag && $this->queue->hasNext()) {
+                $callback = $this->queue->getNextItem();
+                $this->lastReturnValue = $callback($this);
+            }
+        } catch (\Exception $ex) {
+            $handled = false;
+            foreach ($this->exceptionHandlers as $exceptionName => $handler) {
+                if (is_a($ex, $exceptionName)) {
+                    $handler($ex, $this);
+                    $handled = true;
+                    break;
+                }
+            }
+            if (!$handled) {
+                throw $ex;
+            }
         }
     }
     
@@ -137,6 +158,12 @@ class Controller
     public function getDIC()
     {
         return $this->dic;
+    }
+    
+    public function setExceptionHandlerCallback($exceptionName, callable $handler)
+    {
+        $this->exceptionHandlers[$exceptionName] = $handler;
+        return $this;
     }
 
 }
