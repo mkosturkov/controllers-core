@@ -160,6 +160,13 @@ class Controller
         return $this->dic;
     }
     
+    /**
+     * Set exception handler function
+     * 
+     * @param strin $exceptionName The class name of the exception and its descendants to handle
+     * @param callable $handler The function
+     * @return \Tys\Controllers\Controller Returns self
+     */
     public function setExceptionHandlerCallback($exceptionName, callable $handler)
     {
         $this->exceptionHandlers[$exceptionName] = $handler;
