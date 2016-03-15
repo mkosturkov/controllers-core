@@ -175,23 +175,33 @@ class Controller
             throw new AlreadyRunningException('The controller is currently running!');
         }
         $this->runningFlag = true;
-        try {
-            $this->runQueue($this->queue, $this->stopFlag, $this->lastReturnValue);
-        } catch (\Exception $ex) {
-            $handled = false;
-            foreach ($this->exceptionHandlers as $exceptionName => $handler) {
-                if (is_a($ex, $exceptionName)) {
-                    $handler($ex, $this);
-                    $handled = true;
-                    break;
+        
+        while (!$this->stopFlag && $this->queue->hasNext()) {
+            try {
+                $callback = $this->queue->getNextItem();
+                $this->lastReturnValue = $callback($this);
+            } catch (\Exception $ex) {
+                $this->stop();
+                $handled = false;
+                foreach ($this->exceptionHandlers as $exceptionType => $handler) {
+                    if (is_a($ex, $exceptionType)) {
+                        $handler($ex, $this);
+                        $handled = true;
+                        break;
+                    }
                 }
             }
-            if (!$handled) {
-                throw $ex;
-            }
-        } finally {
-            $this->runQueue($this->finalQueue);
         }
+        
+        while ($this->finalQueue->hasNext()) {
+            $callback = $this->finalQueue->getNextItem();
+            $callback($this);
+        }
+        
+        if (isset ($ex) && !$handled) {
+            throw $ex;
+        }
+        
         $this->runningFlag = false;
     }
     
@@ -215,6 +225,24 @@ class Controller
     }
     
     /**
+     * Continue execution of middleware
+     */
+    public function undoStop()
+    {
+        $this->stopFlag = false;
+    }
+    
+    /**
+     * Check wether the middleware execution had been stopped
+     * 
+     * @return bool
+     */
+    public function isStopped()
+    {
+        return $this->stopFlag;
+    }
+    
+    /**
      * Returns a Dependancy Injection Container
      * 
      * @return ContainerInterface
@@ -227,7 +255,7 @@ class Controller
     /**
      * Set exception handler function
      * 
-     * @param strin $exceptionName The class name of the exception and its descendants to handle
+     * @param string $exceptionName The class name of the exception and its descendants to handle
      * @param callable $handler The function
      * @return \Tys\Controllers\Controller Returns self
      */

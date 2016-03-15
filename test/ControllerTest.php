@@ -134,6 +134,15 @@ class ControllerTest extends ControllerTestCase
         $this->controller->run();
     }
     
+    public function testStoppedFlag()
+    {
+        $this->assertFalse($this->controller->isStopped());
+        $this->controller->stop();
+        $this->assertTrue($this->controller->isStopped());
+        $this->controller->undoStop();
+        $this->assertFalse($this->controller->isStopped());
+    }
+    
     public function testStopRun()
     {
         $middleware = $this->makeRunnable();
@@ -148,6 +157,33 @@ class ControllerTest extends ControllerTestCase
             ->method('run');
         $this->controller->appendMiddleware($middleware);
         $this->controller->run();
+    }
+    
+    public function testStopOnException()
+    {
+        $this->controller->appendCallback(function() {
+            throw new Exception();
+        });
+        $this->controller->setExceptionHandlerCallback(Exception::class, function() {});
+        $this->controller->run();
+        $this->assertTrue($this->controller->isStopped());
+        
+    }
+    
+    public function testContinueRunAfterException()
+    {
+        $this->controller->appendCallback(function() {
+            throw new Exception();
+        });
+        $ran = false;
+        $this->controller->appendCallback(function() use (&$ran) {
+            $ran = true;
+        });
+        $this->controller->setExceptionHandlerCallback(Exception::class, function(Exception $ex, Controller $controller) {
+            $controller->undoStop();
+        });
+        $this->controller->run();
+        $this->assertTrue($ran);
     }
     
     public function testDICGetter()
@@ -209,10 +245,12 @@ class ControllerTest extends ControllerTestCase
         $this->controller->run();
         $this->assertEquals('exception-handler', $coughtBy);
         
+        $this->controller->undoStop();
         $this->controller->appendCallback($fre);
         $this->controller->run();
         $this->assertEquals('exception-handler', $coughtBy);
         
+        $this->controller->undoStop();
         $this->controller->appendCallback($fie);
         $this->controller->run();
         $this->assertEquals('invalid-argument-handler', $coughtBy);
