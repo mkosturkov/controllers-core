@@ -23,6 +23,13 @@ class Controller
     private $queue;
     
     /**
+     * Queue to hold middleware for final execution
+     * 
+     * @var UseOnceQueue
+     */
+    private $finalQueue;
+    
+    /**
      * Exception handlers map
      * 
      * @var array
@@ -67,6 +74,7 @@ class Controller
     {
         $this->dic = $dic;
         $this->queue = new UseOnceQueue();
+        $this->finalQueue = new UseOnceQueue();
     }
     
     /**
@@ -90,6 +98,30 @@ class Controller
     public function appendCallback(callable $callback)
     {
         $this->queue->appendItem($callback);
+        return $this;
+    }
+    
+    /**
+     * Append a callback to the final queue
+     * 
+     * @param callable $callback
+     * @return \Tys\Controllers\Controller Returns self
+     */
+    public function appendFinalCallback(callable $callback)
+    {
+        $this->finalQueue->appendItem($callback);
+        return $this;
+    }
+    
+    /**
+     * Prepend a callbakc to the final queue
+     * 
+     * @param callable $callback
+     * @return \Tys\Controllers\Controller
+     */
+    public function prependFinalCallback(callable $callback)
+    {
+        $this->finalQueue->prependItem($callback);
         return $this;
     }
     
@@ -151,6 +183,11 @@ class Controller
             }
             if (!$handled) {
                 throw $ex;
+            }
+        } finally {
+            while ($this->finalQueue->hasNext()) {
+                $callback = $this->finalQueue->getNextItem();
+                $this->lastReturnValue = $callback($this);
             }
         }
         $this->runningFlag = false;

@@ -60,6 +60,48 @@ class ControllerTest extends ControllerTestCase
         );
     }
     
+    public function testAppendFinalCallback()
+    {
+        $this->checkRunAndRunOrder($this->controller, 'appendFinalCallback', false);
+    }
+    
+    public function testPrependFinalCallback()
+    {
+        $this->checkRunAndRunOrder($this->controller, 'prependFinalCallback', true);
+    }
+    
+    public function testFinalCallbackAfterException()
+    {
+        $this->controller->appendCallback(function() {
+            throw new Exception();
+        });
+        
+        $ran = false;
+        $this->controller->appendFinalCallback(function() use (&$ran) {
+            $ran = true;
+        });
+        try {
+            $this->controller->run();
+        } catch (Exception $ex) {
+            
+        }
+        $this->assertTrue($ran);
+    }
+    
+    public function testFinalCallbackAfterHandledException()
+    {
+        $this->controller->appendCallback(function() {
+            throw new Exception();
+        });
+        $this->controller->setExceptionHandlerCallback(Exception::class, function() {});
+        $ran = false;
+        $this->controller->appendFinalCallback(function() use (&$ran) {
+            $ran = true;
+        });
+        $this->controller->run();
+        $this->assertTrue($ran);
+    }
+    
     public function testLastValue()
     {
         $middleware = $this->makeRunnable();
