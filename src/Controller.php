@@ -66,14 +66,6 @@ class Controller
      * @var bool
      */
     private $runningFlag = false;
-    
-    private function runQueue(UseOnceQueue $queue, &$stopFlag = false, &$returnValue = null)
-    {
-        while (!$stopFlag && $queue->hasNext()) {
-            $callback = $queue->getNextItem();
-            $returnValue = $callback($this);
-        }
-    }
 
     /**
      * @param ContainerInterface $dic A Dependancy Injection Container
