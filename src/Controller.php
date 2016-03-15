@@ -66,6 +66,14 @@ class Controller
      * @var bool
      */
     private $runningFlag = false;
+    
+    private function runQueue(UseOnceQueue $queue, &$stopFlag = false, &$returnValue = null)
+    {
+        while (!$stopFlag && $queue->hasNext()) {
+            $callback = $queue->getNextItem();
+            $returnValue = $callback($this);
+        }
+    }
 
     /**
      * @param ContainerInterface $dic A Dependancy Injection Container
@@ -168,10 +176,7 @@ class Controller
         }
         $this->runningFlag = true;
         try {
-            while (!$this->stopFlag && $this->queue->hasNext()) {
-                $callback = $this->queue->getNextItem();
-                $this->lastReturnValue = $callback($this);
-            }
+            $this->runQueue($this->queue, $this->stopFlag, $this->lastReturnValue);
         } catch (\Exception $ex) {
             $handled = false;
             foreach ($this->exceptionHandlers as $exceptionName => $handler) {
@@ -185,10 +190,7 @@ class Controller
                 throw $ex;
             }
         } finally {
-            while ($this->finalQueue->hasNext()) {
-                $callback = $this->finalQueue->getNextItem();
-                $this->lastReturnValue = $callback($this);
-            }
+            $this->runQueue($this->finalQueue);
         }
         $this->runningFlag = false;
     }
