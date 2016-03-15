@@ -2,6 +2,7 @@
 
 use \Tys\Controllers\Contracts\MiddlewareInterface;
 use \Tys\Controllers\Controller;
+use \Tys\Controllers\Exceptions\AlreadyRunningException;
 use \Interop\Container\ContainerInterface;
 
 /**
@@ -68,6 +69,27 @@ class ControllerTest extends ControllerTestCase
         $this->controller->appendMiddleware($middleware);
         $this->controller->run();
         $this->assertEquals('test runned', $this->controller->getLastReturnValue());
+    }
+    
+    public function testIsRunning()
+    {
+        $this->assertFalse($this->controller->isRunning());
+        $running = false;
+        $this->controller->appendCallback(function(Controller $controller) use (&$running) {
+           $running = $controller->isRunning();
+        });
+        $this->controller->run();
+        $this->assertTrue($running);
+        $this->assertFalse($this->controller->isRunning());
+    }
+    
+    public function testExceptionOnRunCallWhileRunning()
+    {
+        $this->controller->appendCallback(function(Controller $controller) {
+            $controller->run();
+        });
+        $this->expectException(AlreadyRunningException::class);
+        $this->controller->run();
     }
     
     public function testStopRun()

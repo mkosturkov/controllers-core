@@ -3,6 +3,7 @@
 namespace Tys\Controllers;
 
 use \Tys\Controllers\Contracts\MiddlewareInterface;
+use \Tys\Controllers\Exceptions\AlreadyRunningException;
 use \Interop\Container\ContainerInterface;
 
 /**
@@ -50,6 +51,14 @@ class Controller
      * @var bool
      */
     private $stopFlag = false;
+    
+    /**
+     * Flag to indicate wether the run method had been called
+     * and hasn't finished
+     * 
+     * @var bool
+     */
+    private $runningFlag = false;
 
     /**
      * @param ContainerInterface $dic A Dependancy Injection Container
@@ -107,10 +116,25 @@ class Controller
     }
     
     /**
+     * Returns true is the run method had been called
+     * and has not yet completed, false otherwise.
+     * 
+     * @return bool
+     */
+    public function isRunning()
+    {
+        return $this->runningFlag;
+    }
+    
+    /**
      * Run all the middleware available
      */
     public function run()
     {
+        if ($this->isRunning()) {
+            throw new AlreadyRunningException('The controller is currently running!');
+        }
+        $this->runningFlag = true;
         try {
             while (!$this->stopFlag && $this->queue->hasNext()) {
                 $callback = $this->queue->getNextItem();
@@ -129,6 +153,7 @@ class Controller
                 throw $ex;
             }
         }
+        $this->runningFlag = false;
     }
     
     /**
