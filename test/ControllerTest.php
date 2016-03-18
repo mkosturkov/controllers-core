@@ -272,4 +272,15 @@ class ControllerTest extends ControllerTestCase
         $this->assertEquals('exception-handler', $coughtBy);
     }
     
+    public function testQueueFlush()
+    {
+        $ran = false;
+        $this->controller->appendCallback(function() use (&$ran) {
+            $ran = true;
+        });
+        $this->assertSame($this->controller, $this->controller->flushQueue());
+        $this->controller->run();
+        $this->assertFalse($ran);
+    }
+    
 }

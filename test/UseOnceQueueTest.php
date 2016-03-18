@@ -71,5 +71,14 @@ class UseOnceQueueTest extends PHPUnit_Framework_TestCase
               ->prependItem('first');
         $this->assertEquals(['first', 'second'], [$queue->getNextItem(), $queue->getNextItem()]);
     }
+    
+    public function testFlushQueue()
+    {
+        $queue = new UseOnceQueue();
+        $queue->prependItem('first');
+        $queue->appendItem('second');
+        $this->assertSame($queue, $queue->flush());
+        $this->assertFalse($queue->hasNext());
+    }
 
 }

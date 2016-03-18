@@ -64,4 +64,14 @@ class UseOnceQueue
         throw new \OutOfBoundsException('The queue is empty!');
     }
     
+    /**
+     * Empties the queue
+     * @return \Tys\Controllers\UseOnceQueue Returns self
+     */
+    public function flush()
+    {
+        $this->items = [];
+        return $this;
+    }
+    
 }

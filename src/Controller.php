@@ -148,6 +148,17 @@ class Controller
     }
     
     /**
+     * Remove all ramaining middleware and callbacks
+     * 
+     * @return \Tys\Controllers\Controller returns self
+     */
+    public function flushQueue()
+    {
+        $this->queue->flush();
+        return $this;
+    }
+    
+    /**
      * Returns true is the run method had been called
      * and has not yet completed, false otherwise.
      * 
