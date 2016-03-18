@@ -38,6 +38,28 @@ class ControllerTest extends ControllerTestCase
         $this->checkRunAndRunOrder($this->controller, 'prependCallback', true);
     }
     
+    public function testAppendMiddleware()
+    {
+        $this->checkRunAndRunOrder(
+            $this->controller,
+            'appendMiddleware',
+            false,
+            MiddlewareInterface::class,
+            'run'
+        );
+    }
+    
+    public function testPrependMiddleware()
+    {
+        $this->checkRunAndRunOrder(
+            $this->controller,
+            'prependMiddleware',
+            true,
+            MiddlewareInterface::class,
+            'run'
+        );
+    }
+    
     public function testAppendFinalCallback()
     {
         $this->checkRunAndRunOrder($this->controller, 'appendFinalCallback', false);
@@ -82,9 +104,11 @@ class ControllerTest extends ControllerTestCase
     
     public function testLastValue()
     {
-        $this->controller->appendCallback(function() {
-            return 'test runned';
-        });
+        $middleware = $this->makeRunnable();
+        $middleware->expects($this->once())
+            ->method('run')
+            ->willReturn('test runned');
+        $this->controller->appendMiddleware($middleware);
         $this->controller->run();
         $this->assertEquals('test runned', $this->controller->getLastReturnValue());
     }
@@ -121,18 +145,18 @@ class ControllerTest extends ControllerTestCase
     
     public function testStopRun()
     {
-        $ran = false;
-        $notRan = true;
-        $this->controller->appendCallback(function(Controller $controller) use (&$ran) {
-            $ran = true;
-            $controller->stop();
-        });
-        $this->controller->appendCallback(function() use (&$notRan) {
-            $notRan = false;
-        } );
+        $middleware = $this->makeRunnable();
+        $middleware->expects($this->once())
+            ->method('run')
+            ->will($this->returnCallback(function ($controller) {
+                $controller->stop();
+            }));
+        $this->controller->appendMiddleware($middleware);
+        $middleware = $this->makeRunnable();
+        $middleware->expects($this->never())
+            ->method('run');
+        $this->controller->appendMiddleware($middleware);
         $this->controller->run();
-        $this->assertTrue($ran);
-        $this->assertTrue($notRan);
     }
     
     public function testStopOnException()
