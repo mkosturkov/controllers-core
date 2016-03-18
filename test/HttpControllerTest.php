@@ -57,4 +57,28 @@ class HttpControllerTest extends ControllerTestCase
         );
     }
     
+    public function testAppendFinalHttpMiddleware()
+    {
+        $this->controller->stop();
+        $this->checkRunAndRunOrder(
+            $this->controller,
+            'appendFinalHttpMiddleware',
+            false,
+            HttpMiddlerwareInterface::class,
+            'httpRun'
+        );
+    }
+    
+    public function testPrependFinalHttpMiddleware()
+    {
+        $this->controller->stop();
+        $this->checkRunAndRunOrder(
+            $this->controller,
+            'prependFinalHttpMiddleware',
+            true,
+            HttpMiddlerwareInterface::class,
+            'httpRun'
+        );
+    }
+    
 }

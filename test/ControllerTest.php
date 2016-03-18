@@ -62,12 +62,26 @@ class ControllerTest extends ControllerTestCase
     
     public function testAppendFinalCallback()
     {
+        $this->controller->stop();
         $this->checkRunAndRunOrder($this->controller, 'appendFinalCallback', false);
     }
     
     public function testPrependFinalCallback()
     {
+        $this->controller->stop();
         $this->checkRunAndRunOrder($this->controller, 'prependFinalCallback', true);
+    }
+    
+    public function testAppendFinalMiddleware()
+    {
+        $this->controller->stop();
+        $this->checkRunAndRunOrder($this->controller, 'appendFinalMiddleware', false, MiddlewareInterface::class, 'run');
+    }
+    
+    public function testPrependFinalMiddleware()
+    {
+        $this->controller->stop();
+        $this->checkRunAndRunOrder($this->controller, 'prependFinalMiddleware', true, MiddlewareInterface::class, 'run');
     }
     
     public function testFinalCallbackAfterException()

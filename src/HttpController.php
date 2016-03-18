@@ -63,6 +63,28 @@ class HttpController extends Controller
     }
     
     /**
+     * Append http middleware to final queue
+     * 
+     * @param HttpMiddlerwareInterface $middleware
+     * @return self
+     */
+    public function appendFinalHttpMiddleware(HttpMiddlerwareInterface $middleware)
+    {
+        return $this->appendFinalCallback([$middleware, 'httpRun']);
+    }
+    
+    /**
+     * Prepend http middleware to the final queue
+     * 
+     * @param HttpMiddlerwareInterface $middleware
+     * @return self
+     */
+    public function prependFinalHttpMiddleware(HttpMiddlerwareInterface $middleware)
+    {
+        return $this->prependFinalCallback([$middleware, 'httpRun']);
+    }
+    
+    /**
      * Returns an a PSR-7 compliant request object
      * 
      * @return RequestInterface
