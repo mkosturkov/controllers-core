@@ -31,6 +31,13 @@ class HttpControllerTest extends ControllerTestCase
         $this->assertSame($this->requestStub, $this->controller->getRequest());
     }
     
+    public function testRequestGetterSetter()
+    {
+        $requestStub = $this->getMock(RequestInterface::class);
+        $this->assertSame($this->controller, $this->controller->setRequest($requestStub));
+        $this->assertSame($requestStub, $this->controller->getRequest());
+    }
+    
     public function testResponseGetterSetter()
     {
         $response = $this->getMock(ResponseInterface::class);

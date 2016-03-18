@@ -85,6 +85,18 @@ class HttpController extends Controller
     }
     
     /**
+     * Set a PSR-7 request
+     * 
+     * @param RequestInterface $request
+     * @return \Tys\Controllers\HttpController returns self
+     */
+    public function setRequest(RequestInterface $request)
+    {
+        $this->request = $request;
+        return $this;
+    }
+    
+    /**
      * Returns an a PSR-7 compliant request object
      * 
      * @return RequestInterface
