@@ -126,28 +126,6 @@ class Controller
     }
     
     /**
-     * Prepend middleware to execution queue
-     * 
-     * @param MiddlewareInterface $middleware
-     * @return Controller
-     */
-    public function prependMiddleware(MiddlewareInterface $middleware)
-    {
-        return $this->prependCallback([$middleware, 'run']);
-    }
-    
-    /**
-     * Append middleware to exection queue
-     * 
-     * @param MiddlewareInterface $middleware
-     * @return Controller
-     */
-    public function appendMiddleware(MiddlewareInterface $middleware)
-    {
-        return $this->appendCallback([$middleware, 'run']);
-    }
-    
-    /**
      * Remove all ramaining middleware and callbacks
      * 
      * @return \Tys\Controllers\Controller returns self
