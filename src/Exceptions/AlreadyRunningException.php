@@ -5,7 +5,7 @@ namespace Tys\Controllers\Exceptions;
 /**
  * Description of AlreadyRunningException
  *
- * @author milko
+ * @author Milko Kosturkov <mkosturkov@gmail.com>
  */
 class AlreadyRunningException extends \RuntimeException
 {
