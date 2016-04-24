@@ -1,6 +1,6 @@
 <?php
 
-use \Tys\Controllers\Contracts\MiddlewareInterface;
+use \Tys\Controllers\Contracts\Middleware;
 use \Tys\Controllers\Controller;
 use \Tys\Controllers\Exceptions\AlreadyRunningException;
 use \Interop\Container\ContainerInterface;
@@ -19,7 +19,7 @@ class ControllerTest extends ControllerTestCase
 
     private function makeRunnable()
     {
-        return $this->getMock(MiddlewareInterface::class);
+        return $this->getMock(Middleware::class);
     }
     
     public function setUp()
@@ -44,7 +44,7 @@ class ControllerTest extends ControllerTestCase
             $this->controller,
             'appendMiddleware',
             false,
-            MiddlewareInterface::class,
+            Middleware::class,
             'run'
         );
     }
@@ -55,7 +55,7 @@ class ControllerTest extends ControllerTestCase
             $this->controller,
             'prependMiddleware',
             true,
-            MiddlewareInterface::class,
+            Middleware::class,
             'run'
         );
     }
@@ -75,13 +75,13 @@ class ControllerTest extends ControllerTestCase
     public function testAppendFinalMiddleware()
     {
         $this->controller->stop();
-        $this->checkRunAndRunOrder($this->controller, 'appendFinalMiddleware', false, MiddlewareInterface::class, 'run');
+        $this->checkRunAndRunOrder($this->controller, 'appendFinalMiddleware', false, Middleware::class, 'run');
     }
     
     public function testPrependFinalMiddleware()
     {
         $this->controller->stop();
-        $this->checkRunAndRunOrder($this->controller, 'prependFinalMiddleware', true, MiddlewareInterface::class, 'run');
+        $this->checkRunAndRunOrder($this->controller, 'prependFinalMiddleware', true, Middleware::class, 'run');
     }
     
     public function testFinalCallbackAfterException()

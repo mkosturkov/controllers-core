@@ -9,7 +9,7 @@ use \Tys\Controllers\Controller;
  * 
  * @author Milko Kosturkov <mkosturkov@gmail.com>
  */
-interface MiddlewareInterface
+interface Middleware
 {
     
     /**

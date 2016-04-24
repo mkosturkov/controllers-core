@@ -2,7 +2,7 @@
 
 namespace Tys\Controllers;
 
-use \Tys\Controllers\Contracts\MiddlewareInterface;
+use \Tys\Controllers\Contracts\Middleware;
 use \Tys\Controllers\Exceptions\AlreadyRunningException;
 use \Interop\Container\ContainerInterface;
 
@@ -128,10 +128,10 @@ class Controller
     /**
      * Prepend middleware to execution queue
      * 
-     * @param MiddlewareInterface $middleware
+     * @param Middleware $middleware
      * @return Controller
      */
-    public function prependMiddleware(MiddlewareInterface $middleware)
+    public function prependMiddleware(Middleware $middleware)
     {
         return $this->prependCallback([$middleware, 'run']);
     }
@@ -139,10 +139,10 @@ class Controller
     /**
      * Append middleware to exection queue
      * 
-     * @param MiddlewareInterface $middleware
+     * @param Middleware $middleware
      * @return Controller
      */
-    public function appendMiddleware(MiddlewareInterface $middleware)
+    public function appendMiddleware(Middleware $middleware)
     {
         return $this->appendCallback([$middleware, 'run']);
     }
@@ -150,10 +150,10 @@ class Controller
     /**
      * Prepend middleware to execution queue
      * 
-     * @param MiddlewareInterface $middleware
+     * @param Middleware $middleware
      * @return self
      */
-    public function prependFinalMiddleware(MiddlewareInterface $middleware)
+    public function prependFinalMiddleware(Middleware $middleware)
     {
         return $this->prependFinalCallback([$middleware, 'run']);
     }
@@ -161,10 +161,10 @@ class Controller
     /**
      * Append middleware to the final queue
      * 
-     * @param MiddlewareInterface $middleware
+     * @param Middleware $middleware
      * @return self
      */
-    public function appendFinalMiddleware(MiddlewareInterface $middleware)
+    public function appendFinalMiddleware(Middleware $middleware)
     {
         return $this->appendFinalCallback([$middleware, 'run']);
     }
