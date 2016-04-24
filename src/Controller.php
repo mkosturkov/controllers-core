@@ -4,7 +4,6 @@ namespace Tys\Controllers;
 
 use \Tys\Controllers\Contracts\Middleware;
 use \Tys\Controllers\Exceptions\AlreadyRunningException;
-use \Interop\Container\ContainerInterface;
 
 /**
  * Base class for application controllers.
@@ -37,13 +36,6 @@ class Controller
     private $exceptionHandlers = [];
     
     /**
-     * Dependancy injection container
-     * 
-     * @var ContainerInterface
-     */
-    private $dic;
-
-    /**
      * Holds the return value
      * of the last run middlware
      * 
@@ -67,12 +59,8 @@ class Controller
      */
     private $runningFlag = false;
 
-    /**
-     * @param ContainerInterface $dic A Dependancy Injection Container
-     */
-    public function __construct(ContainerInterface $dic)
+    public function __construct()
     {
-        $this->dic = $dic;
         $this->queue = new UseOnceQueue();
         $this->finalQueue = new UseOnceQueue();
     }
@@ -265,16 +253,6 @@ class Controller
     public function isStopped()
     {
         return $this->stopFlag;
-    }
-    
-    /**
-     * Returns a Dependancy Injection Container
-     * 
-     * @return ContainerInterface
-     */
-    public function getDIC()
-    {
-        return $this->dic;
     }
     
     /**

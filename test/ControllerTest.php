@@ -12,8 +12,6 @@ use \Interop\Container\ContainerInterface;
  */
 class ControllerTest extends ControllerTestCase
 {
-
-    private $dicStub;
     
     private $controller;
 
@@ -24,8 +22,7 @@ class ControllerTest extends ControllerTestCase
     
     public function setUp()
     {
-        $this->dicStub = $this->getMock(ContainerInterface::class);
-        $this->controller = new Controller($this->dicStub);
+        $this->controller = new Controller();
     }
     
     public function testAppendCallback()
@@ -198,11 +195,6 @@ class ControllerTest extends ControllerTestCase
         });
         $this->controller->run();
         $this->assertTrue($ran);
-    }
-    
-    public function testDICGetter()
-    {
-        $this->assertSame($this->dicStub, $this->controller->getDIC());
     }
     
     public function testUnhandledException()
