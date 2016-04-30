@@ -3,7 +3,6 @@
 use \Tys\Controllers\Contracts\Middleware;
 use \Tys\Controllers\Controller;
 use \Tys\Controllers\Exceptions\AlreadyRunningException;
-use \Interop\Container\ContainerInterface;
 
 /**
  * Tests for the Tys\Controllers\Controller class
