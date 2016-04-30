@@ -1,5 +1,7 @@
 <?php
 
+use \Tys\Controllers\Contracts\Middleware;
+
 /**
  * Base for controller test cases
  *
@@ -7,6 +9,11 @@
  */
 abstract class ControllerTestCase extends PHPUnit_Framework_TestCase
 {
+    
+    protected function makeMiddlewareMock()
+    {
+        return $this->getMock(Middleware::class);
+    }
 
     protected function checkRunAndRunOrder(
         $controller,
