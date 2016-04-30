@@ -23,7 +23,7 @@ class MiddlewareQueueModifier
      * Appends a middleware item at the end of the queue
      * 
      * @param Middleware $middleware
-     * @return self Returns this
+     * @return this
      */
     public function append(Middleware $middleware)
     {
@@ -35,7 +35,7 @@ class MiddlewareQueueModifier
      * Prepends a middleware item in the beggining of the queue
      * 
      * @param Middleware $middleware
-     * @return self Returns this
+     * @return this
      */
     public function prepend(Middleware $middleware)
     {
