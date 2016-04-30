@@ -13,11 +13,6 @@ class ControllerTest extends ControllersTestCase
 {
     
     private $controller;
-
-    private function makeRunnable()
-    {
-        return $this->getMock(Middleware::class);
-    }
     
     public function setUp()
     {
@@ -114,7 +109,7 @@ class ControllerTest extends ControllersTestCase
     
     public function testLastValue()
     {
-        $middleware = $this->makeRunnable();
+        $middleware = $this->makeMiddlewareMock();
         $middleware->expects($this->once())
             ->method('run')
             ->willReturn('test runned');
@@ -155,14 +150,14 @@ class ControllerTest extends ControllersTestCase
     
     public function testStopRun()
     {
-        $middleware = $this->makeRunnable();
+        $middleware = $this->makeMiddlewareMock();
         $middleware->expects($this->once())
             ->method('run')
             ->will($this->returnCallback(function ($controller) {
                 $controller->stop();
             }));
         $this->controller->appendMiddleware($middleware);
-        $middleware = $this->makeRunnable();
+        $middleware = $this->makeMiddlewareMock();
         $middleware->expects($this->never())
             ->method('run');
         $this->controller->appendMiddleware($middleware);
