@@ -1,20 +1,20 @@
 <?php
 
-use \Tys\Controllers\MiddlewareQueue;
+use \Tys\Controllers\UseOnceMiddlewareQueue;
 
 /**
  * Tests for the Tys\Controllers\MiddlewareQueue class
  *
  * @author Milko Kosturkov <mkosturkov@gmail.com>
  */
-class MiddlewareQueueTest extends ControllersTestCase
+class UseOnceMiddlewareQueueTest extends ControllersTestCase
 {
     
     private $queue;
     
     public function setUp()
     {
-        $this->queue = new MiddlewareQueue();
+        $this->queue = new UseOnceMiddlewareQueue();
     }
     
     public function testEmptyQueueHasNoNextQueue()

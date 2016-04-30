@@ -9,10 +9,10 @@ namespace Tys\Controllers;
  * from the beggining of the collection in sequential order only.
  * Once an item has been fetched it is appended to the end from the queue.
  *
- * @see MiddlewareQueue
+ * @see UseOnceMiddlewareQueue
  * @author Milko Kosturkov <mkosturkov@gmail.com>
  */
-class LoopingMiddlewareQueue extends MiddlewareQueue
+class LoopingMiddlewareQueue extends UseOnceMiddlewareQueue
 {
     public function getNext()
     {

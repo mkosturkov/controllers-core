@@ -13,7 +13,7 @@ use \Tys\Controllers\Contracts\Middleware;
  *
  * @author Milko Kosturkov <mkosturkov@gmail.com>
  */
-class MiddlewareQueue
+class UseOnceMiddlewareQueue
 {
 
     /**
@@ -34,7 +34,7 @@ class MiddlewareQueue
     /**
      * Appends a middleware item at the end of the queue
      * @param Middleware $middleware
-     * @return \Tys\Controllers\MiddlewareQueue Returns this
+     * @return self Returns this
      */
     public function append(Middleware $middleware)
     {
@@ -45,7 +45,7 @@ class MiddlewareQueue
     /**
      * Prepends a middleware item in the beggining of the queue
      * @param Middleware $middleware
-     * @return \Tys\Controllers\MiddlewareQueue Returns this
+     * @return self Returns this
      */
     public function prepend(Middleware $middleware)
     {
@@ -68,7 +68,7 @@ class MiddlewareQueue
     
     /**
      * Empties the queue
-     * @return \Tys\Controllers\MiddlewareQueue Returns this
+     * @return self Returns this
      */
     public function flush()
     {
