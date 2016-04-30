@@ -7,7 +7,7 @@ use \Tys\Controllers\MiddlewareQueue;
  *
  * @author Milko Kosturkov <mkosturkov@gmail.com>
  */
-class MiddlewareQueueTest extends ControllerTestCase
+class MiddlewareQueueTest extends ControllersTestCase
 {
     
     private $queue;

@@ -3,11 +3,11 @@
 use \Tys\Controllers\Contracts\Middleware;
 
 /**
- * Base for controller test cases
+ * Base for controllers test cases
  *
  * @author Milko Kosturkov <mkosturkov@gmail.com>
  */
-abstract class ControllerTestCase extends PHPUnit_Framework_TestCase
+abstract class ControllersTestCase extends PHPUnit_Framework_TestCase
 {
     
     protected function makeMiddlewareMock()

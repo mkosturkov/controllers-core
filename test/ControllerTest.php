@@ -10,7 +10,7 @@ use \Interop\Container\ContainerInterface;
  *
  * @author Milko Kosturkov <mkosturkov@gmail.com>
  */
-class ControllerTest extends ControllerTestCase
+class ControllerTest extends ControllersTestCase
 {
     
     private $controller;
