@@ -14,158 +14,46 @@ use \Tys\Controllers\Exceptions\AlreadyRunningException;
 class Controller
 {
 
-    /**
-     * Queue to hold middleware
-     * 
-     * @var UseOnceQueue
-     */
-    private $queue;
+   private $queue;
+   
+   private $queueModfier;
     
-    /**
-     * Queue to hold middleware for final execution
-     * 
-     * @var UseOnceQueue
-     */
-    private $finalQueue;
+   private $finalQueue;
+   
+   private $finalQueueModifier;
     
-    /**
-     * Exception handlers map
-     * 
-     * @var array
-     */
-    private $exceptionHandlers = [];
+   private $exceptionHandlers = [];
     
-    /**
-     * Holds the return value
-     * of the last run middlware
-     * 
-     * @var mixed
-     */
-    private $lastReturnValue;
+   private $lastReturnValue;
     
-    /**
-     * Flag to indicate that the stop method
-     * has been called
-     * 
-     * @var bool
-     */
-    private $stopFlag = false;
+   private $stopFlag = false;
     
-    /**
-     * Flag to indicate wether the run method had been called
-     * and hasn't finished
-     * 
-     * @var bool
-     */
-    private $runningFlag = false;
+   private $runningFlag = false;
 
     public function __construct()
     {
-        $this->queue = new UseOnceQueue();
-        $this->finalQueue = new UseOnceQueue();
+        $this->queue = new MiddlewareQueue();
+        $this->finalQueue = new MiddlewareQueue();
+        $this->queueModfier = new MiddlewareQueueModifier($this->queue);
+        $this->finalQueueModifier = new MiddlewareQueueModifier($this->finalQueue);
     }
     
     /**
-     * Prepend a callback to the execution queue
      * 
-     * @param \callable $callback
-     * @return \Tys\Controllers\Controller Returns self
+     * @return MiddlewareQueueModifier
      */
-    public function prependCallback(callable $callback)
+    public function getQueueModifier()
     {
-        $this->queue->prependItem($callback);
-        return $this;
+        return $this->queueModfier;
     }
     
     /**
-     * Append a callback to the execution queue
      * 
-     * @param \callable $callback
-     * @return \Tys\Controllers\Controller Returns self
+     * @return MiddlewareQueueModifier
      */
-    public function appendCallback(callable $callback)
+    public function getFinalQueueModifier()
     {
-        $this->queue->appendItem($callback);
-        return $this;
-    }
-    
-    /**
-     * Append a callback to the final queue
-     * 
-     * @param callable $callback
-     * @return \Tys\Controllers\Controller Returns self
-     */
-    public function appendFinalCallback(callable $callback)
-    {
-        $this->finalQueue->appendItem($callback);
-        return $this;
-    }
-    
-    /**
-     * Prepend a callbakc to the final queue
-     * 
-     * @param callable $callback
-     * @return \Tys\Controllers\Controller
-     */
-    public function prependFinalCallback(callable $callback)
-    {
-        $this->finalQueue->prependItem($callback);
-        return $this;
-    }
-    
-    /**
-     * Prepend middleware to execution queue
-     * 
-     * @param Middleware $middleware
-     * @return Controller
-     */
-    public function prependMiddleware(Middleware $middleware)
-    {
-        return $this->prependCallback([$middleware, 'run']);
-    }
-    
-    /**
-     * Append middleware to exection queue
-     * 
-     * @param Middleware $middleware
-     * @return Controller
-     */
-    public function appendMiddleware(Middleware $middleware)
-    {
-        return $this->appendCallback([$middleware, 'run']);
-    }
-    
-    /**
-     * Prepend middleware to execution queue
-     * 
-     * @param Middleware $middleware
-     * @return self
-     */
-    public function prependFinalMiddleware(Middleware $middleware)
-    {
-        return $this->prependFinalCallback([$middleware, 'run']);
-    }
-    
-    /**
-     * Append middleware to the final queue
-     * 
-     * @param Middleware $middleware
-     * @return self
-     */
-    public function appendFinalMiddleware(Middleware $middleware)
-    {
-        return $this->appendFinalCallback([$middleware, 'run']);
-    }
-    
-    /**
-     * Remove all ramaining middleware and callbacks
-     * 
-     * @return \Tys\Controllers\Controller returns self
-     */
-    public function flushQueue()
-    {
-        $this->queue->flush();
-        return $this;
+        return $this->finalQueueModifier;
     }
     
     /**
@@ -191,8 +79,8 @@ class Controller
         
         while (!$this->stopFlag && $this->queue->hasNext()) {
             try {
-                $callback = $this->queue->getNextItem();
-                $this->lastReturnValue = $callback($this);
+                $middleware = $this->queue->getNext();
+                $this->lastReturnValue = $middleware->run($this);
             } catch (\Exception $ex) {
                 $this->stop();
                 $handled = false;
@@ -207,8 +95,8 @@ class Controller
         }
         
         while ($this->finalQueue->hasNext()) {
-            $callback = $this->finalQueue->getNextItem();
-            $callback($this);
+            $middleware = $this->finalQueue->getNext();
+            $middleware->run($this);
         }
         
         if (isset ($ex) && !$handled) {

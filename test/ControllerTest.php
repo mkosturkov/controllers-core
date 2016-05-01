@@ -1,6 +1,6 @@
 <?php
 
-use \Tys\Controllers\Contracts\Middleware;
+use \Tys\Controllers\MiddlewareQueueModifier;
 use \Tys\Controllers\Controller;
 use \Tys\Controllers\Exceptions\AlreadyRunningException;
 
@@ -10,81 +10,81 @@ use \Tys\Controllers\Exceptions\AlreadyRunningException;
  * @author Milko Kosturkov <mkosturkov@gmail.com>
  */
 class ControllerTest extends ControllersTestCase
-{
-    
+{   
     private $controller;
+    
+    private $queue;
+    
+    private $finalQueue;
     
     public function setUp()
     {
         $this->controller = new Controller();
+        $this->queue = $this->controller->getQueueModifier();
+        $this->finalQueue = $this->controller->getFinalQueueModifier();
     }
     
-    public function testAppendCallback()
+    public function testQueueModifierGettersReturnTypes()
     {
-        $this->checkRunAndRunOrder($this->controller, 'appendCallback', false);
+        foreach (['getQueueModifier', 'getFinalQueueModifier'] as $methodName) {
+            $this->assertInstanceOf(MiddlewareQueueModifier::class, $this->controller->$methodName());
+        }
     }
     
-    public function testPrependCallback()
+    public function testQueueRun()
     {
-        $this->checkRunAndRunOrder($this->controller, 'prependCallback', true);
+        $result = $this->prepareForRunTest($this->queue, false, [1, 2, 3]);
+        $this->controller->run();
+        $this->checkRunResult($result);
     }
     
-    public function testAppendMiddleware()
+    public function testReverseQueueRun()
     {
-        $this->checkRunAndRunOrder(
-            $this->controller,
-            'appendMiddleware',
-            false,
-            Middleware::class,
-            'run'
-        );
+        $result = $this->prepareForRunTest($this->queue, true, [1, 2, 3]);
+        $this->controller->run();
+        $this->checkRunResult($result);
     }
     
-    public function testPrependMiddleware()
+    public function testFinalQueueRun()
     {
-        $this->checkRunAndRunOrder(
-            $this->controller,
-            'prependMiddleware',
-            true,
-            Middleware::class,
-            'run'
-        );
+        $result = $this->prepareForRunTest($this->finalQueue, false, [1, 2, 3]);
+        $this->controller->run();
+        $this->checkRunResult($result);
     }
     
-    public function testAppendFinalCallback()
+    public function testReverseFinalQueueRun()
     {
-        $this->controller->stop();
-        $this->checkRunAndRunOrder($this->controller, 'appendFinalCallback', false);
+        $result = $this->prepareForRunTest($this->finalQueue, true, [1, 2, 3]);
+        $this->controller->run();
+        $this->checkRunResult($result);
     }
     
-    public function testPrependFinalCallback()
+    public function testQueueAndFinalQueueRun()
     {
-        $this->controller->stop();
-        $this->checkRunAndRunOrder($this->controller, 'prependFinalCallback', true);
+        $queueResult = $this->prepareForRunTest($this->queue, false, [1, 2, 3]);
+        $finalQueueResult = $this->prepareForRunTest($this->finalQueue, false, [4, 5, 6]);
+        $this->controller->run();
+        $this->checkRunResult([
+            'expected' => [$queueResult['expected'] + $finalQueueResult['expected']],
+            'actual' => [$queueResult['actual'] + $finalQueueResult['actual']]
+        ]);
     }
     
-    public function testAppendFinalMiddleware()
+    public function testRethrowingUnhandledException()
     {
-        $this->controller->stop();
-        $this->checkRunAndRunOrder($this->controller, 'appendFinalMiddleware', false, Middleware::class, 'run');
-    }
-    
-    public function testPrependFinalMiddleware()
-    {
-        $this->controller->stop();
-        $this->checkRunAndRunOrder($this->controller, 'prependFinalMiddleware', true, Middleware::class, 'run');
+        $this->addExceptionInQueue();
+        $this->expectException(\Exception::class);
+        $this->controller->run();
     }
     
     public function testFinalCallbackAfterException()
     {
-        $this->controller->appendCallback(function() {
-            throw new Exception();
-        });
-        
+        $this->addExceptionInQueue();
         $ran = false;
-        $this->controller->appendFinalCallback(function() use (&$ran) {
+        $this->appendCallback(function() use (&$ran) {
             $ran = true;
-        });
+        }, $this->finalQueue);
+        
         try {
             $this->controller->run();
         } catch (Exception $ex) {
@@ -95,14 +95,12 @@ class ControllerTest extends ControllersTestCase
     
     public function testFinalCallbackAfterHandledException()
     {
-        $this->controller->appendCallback(function() {
-            throw new Exception();
-        });
+        $this->addExceptionInQueue();
         $this->controller->setExceptionHandlerCallback(Exception::class, function() {});
         $ran = false;
-        $this->controller->appendFinalCallback(function() use (&$ran) {
+        $this->appendCallback(function() use (&$ran) {
             $ran = true;
-        });
+        }, $this->finalQueue);
         $this->controller->run();
         $this->assertTrue($ran);
     }
@@ -110,29 +108,35 @@ class ControllerTest extends ControllersTestCase
     public function testLastValue()
     {
         $middleware = $this->makeMiddlewareMock();
+        $returnValue = 'test runned';
         $middleware->expects($this->once())
             ->method('run')
-            ->willReturn('test runned');
-        $this->controller->appendMiddleware($middleware);
+            ->willReturn($returnValue);
+        $this->queue->append($middleware);
         $this->controller->run();
-        $this->assertEquals('test runned', $this->controller->getLastReturnValue());
+        $this->assertEquals($returnValue, $this->controller->getLastReturnValue());
     }
     
     public function testIsRunning()
     {
         $this->assertFalse($this->controller->isRunning());
-        $running = false;
-        $this->controller->appendCallback(function(Controller $controller) use (&$running) {
-           $running = $controller->isRunning();
-        });
+        $runningInQueue = false;
+        $runningInFinalQueue = false;
+        $this->appendCallback(function(Controller $controller) use (&$runningInQueue) {
+            $runningInQueue = $controller->isRunning();
+         });
+         $this->appendCallback(function (Controller $controller) use (&$runningInFinalQueue) {
+             $runningInFinalQueue = $controller->isRunning();
+         }, $this->finalQueue);
         $this->controller->run();
-        $this->assertTrue($running);
+        $this->assertTrue($runningInQueue);
+        $this->assertTrue($runningInFinalQueue);
         $this->assertFalse($this->controller->isRunning());
     }
     
     public function testExceptionOnRunCallWhileRunning()
     {
-        $this->controller->appendCallback(function(Controller $controller) {
+        $this->appendCallback(function(Controller $controller) {
             $controller->run();
         });
         $this->expectException(AlreadyRunningException::class);
@@ -150,25 +154,19 @@ class ControllerTest extends ControllersTestCase
     
     public function testStopRun()
     {
-        $middleware = $this->makeMiddlewareMock();
-        $middleware->expects($this->once())
-            ->method('run')
-            ->will($this->returnCallback(function ($controller) {
-                $controller->stop();
-            }));
-        $this->controller->appendMiddleware($middleware);
+        $this->appendCallback(function ($controller) {
+            $controller->stop();
+        });
         $middleware = $this->makeMiddlewareMock();
         $middleware->expects($this->never())
             ->method('run');
-        $this->controller->appendMiddleware($middleware);
+        $this->queue->append($middleware);
         $this->controller->run();
     }
     
     public function testStopOnException()
     {
-        $this->controller->appendCallback(function() {
-            throw new Exception();
-        });
+        $this->addExceptionInQueue();
         $this->controller->setExceptionHandlerCallback(Exception::class, function() {});
         $this->controller->run();
         $this->assertTrue($this->controller->isStopped());
@@ -177,11 +175,9 @@ class ControllerTest extends ControllersTestCase
     
     public function testContinueRunAfterException()
     {
-        $this->controller->appendCallback(function() {
-            throw new Exception();
-        });
+        $this->addExceptionInQueue();
         $ran = false;
-        $this->controller->appendCallback(function() use (&$ran) {
+        $this->appendCallback(function() use (&$ran) {
             $ran = true;
         });
         $this->controller->setExceptionHandlerCallback(Exception::class, function(Exception $ex, Controller $controller) {
@@ -193,9 +189,7 @@ class ControllerTest extends ControllersTestCase
     
     public function testUnhandledException()
     {
-        $this->controller->appendCallback(function() {
-            throw new Exception();
-        });
+        $this->addExceptionInQueue();
         $this->expectException(Exception::class);
         $this->controller->run();
     }
@@ -210,7 +204,7 @@ class ControllerTest extends ControllersTestCase
     public function testExceptionHandlerBeingTriggered()
     {
         $thrown = new Exception();
-        $this->controller->appendCallback(function() use ($thrown) {
+        $this->appendCallback(function() use ($thrown) {
             throw $thrown;
         });
         $cought = null;
@@ -241,17 +235,17 @@ class ControllerTest extends ControllersTestCase
             $coughtBy = 'exception-handler';
         });
         
-        $this->controller->appendCallback($fe);
+        $this->appendCallback($fe);
         $this->controller->run();
         $this->assertEquals('exception-handler', $coughtBy);
         
         $this->controller->undoStop();
-        $this->controller->appendCallback($fre);
+        $this->appendCallback($fre);
         $this->controller->run();
         $this->assertEquals('exception-handler', $coughtBy);
         
         $this->controller->undoStop();
-        $this->controller->appendCallback($fie);
+        $this->appendCallback($fie);
         $this->controller->run();
         $this->assertEquals('invalid-argument-handler', $coughtBy);
     }
@@ -265,22 +259,56 @@ class ControllerTest extends ControllersTestCase
         $this->controller->setExceptionHandlerCallback(InvalidArgumentException::class, function() use (&$coughtBy) {
             $coughtBy = 'invalid-argument';
         });
-        $this->controller->appendCallback(function() {
+        $this->appendCallback(function() {
             throw new InvalidArgumentException();
         });
         $this->controller->run();
         $this->assertEquals('exception-handler', $coughtBy);
     }
     
-    public function testQueueFlush()
+    private function prepareForRunTest(MiddlewareQueueModifier $queueModifier, $reversed, array $fillItems)
     {
-        $ran = false;
-        $this->controller->appendCallback(function() use (&$ran) {
-            $ran = true;
-        });
-        $this->assertSame($this->controller, $this->controller->flushQueue());
-        $this->controller->run();
-        $this->assertFalse($ran);
+        $execOrder = [];
+        $modifierMethod = $reversed ? 'prepend' : 'append';
+        
+        foreach ($fillItems as $item) {
+            $callback = function () use (&$execOrder, $item) {
+                $execOrder[] = $item;
+            };
+            $queueModifier->$modifierMethod($this->makeMiddlewareMockWithCallback($callback));
+        }
+        $expectedOrder = $reversed ? array_reverse($fillItems) : $fillItems;
+        return ['expected' => $expectedOrder, 'actual' => &$execOrder];
+    }
+    
+    private function checkRunResult(array $result)
+    {
+        return $this->assertEquals($result['expected'], $result['actual']);
+    }
+    
+    private function makeMiddlewareMockWithCallback(callable $callback)
+    {
+        $mock = $this->makeMiddlewareMock();
+        $mock->expects($this->once())
+            ->method('run')
+            ->with($this->controller)
+            ->will($this->returnCallback($callback));
+        return $mock;
+    }
+    
+    private function addExceptionInQueue()
+    {
+        $this->controller->getQueueModifier()->append(
+            $this->makeMiddlewareMockWithCallback(function() {
+                throw new Exception();
+            })
+        );
+    }
+    
+    private function appendCallback(callable $callback, MiddlewareQueueModifier $queue = null)
+    {
+        $queue = is_null($queue) ? $this->queue : $queue;
+        $queue->append($this->makeMiddlewareMockWithCallback($callback));
     }
     
 }
