@@ -57,14 +57,16 @@ class Controller
     }
     
     /**
-     * Returns true is the run method had been called
-     * and has not yet completed, false otherwise.
+     * Set exception handler function
      * 
-     * @return bool
+     * @param string $exceptionName The class name of the exception and its descendants to handle
+     * @param callable $handler The function
+     * @return \Tys\Controllers\Controller Returns self
      */
-    public function isRunning()
+    public function setExceptionHandlerCallback($exceptionName, callable $handler)
     {
-        return $this->runningFlag;
+        $this->exceptionHandlers[$exceptionName] = $handler;
+        return $this;
     }
     
     /**
@@ -77,44 +79,24 @@ class Controller
         }
         $this->runningFlag = true;
         
-        while (!$this->stopFlag && $this->queue->hasNext()) {
-            try {
-                $middleware = $this->queue->getNext();
-                $this->lastReturnValue = $middleware->run($this);
-            } catch (\Exception $ex) {
-                $this->stop();
-                $handled = false;
-                foreach ($this->exceptionHandlers as $exceptionType => $handler) {
-                    if (is_a($ex, $exceptionType)) {
-                        $handler($ex, $this);
-                        $handled = true;
-                        break;
-                    }
-                }
-            }
-        }
+        $queueRunResult = $this->tryQueueRun();
+        $this->runFinalQueue();
         
-        while ($this->finalQueue->hasNext()) {
-            $middleware = $this->finalQueue->getNext();
-            $middleware->run($this);
+        if (is_array($queueRunResult) && !$queueRunResult['handled']) {
+            throw $queueRunResult['exception'];
         }
-        
-        if (isset ($ex) && !$handled) {
-            throw $ex;
-        }
-        
         $this->runningFlag = false;
     }
     
     /**
-     * Returns the return value of the
-     * last executed middleware
+     * Returns true is the run method had been called
+     * and has not yet completed, false otherwise.
      * 
-     * @return mixed
+     * @return bool
      */
-    public function getLastReturnValue()
+    public function isRunning()
     {
-        return $this->lastReturnValue;
+        return $this->runningFlag;
     }
     
     /**
@@ -144,16 +126,47 @@ class Controller
     }
     
     /**
-     * Set exception handler function
+     * Returns the return value of the
+     * last executed middleware
      * 
-     * @param string $exceptionName The class name of the exception and its descendants to handle
-     * @param callable $handler The function
-     * @return \Tys\Controllers\Controller Returns self
+     * @return mixed
      */
-    public function setExceptionHandlerCallback($exceptionName, callable $handler)
+    public function getLastReturnValue()
     {
-        $this->exceptionHandlers[$exceptionName] = $handler;
-        return $this;
+        return $this->lastReturnValue;
+    }
+    
+    private function tryQueueRun()
+    {
+        while (!$this->stopFlag && $this->queue->hasNext()) {
+            try {
+                $middleware = $this->queue->getNext();
+                $this->lastReturnValue = $middleware->run($this);
+            } catch (\Exception $ex) {
+                $this->stop();
+                $handled = $this->handleException($ex);
+            }
+        }
+        return isset ($ex) ? ['exception' => $ex, 'handled' => $handled] : true;
+    }
+    
+    private function handleException(\Exception $exception)
+    {
+        foreach ($this->exceptionHandlers as $exceptionType => $handler) {
+            if (is_a($exception, $exceptionType)) {
+                $handler($exception, $this);
+                return true;
+            }
+        }
+        return false;
+    }
+    
+    private function runFinalQueue()
+    {
+        while ($this->finalQueue->hasNext()) {
+            $middleware = $this->finalQueue->getNext();
+            $middleware->run($this);
+        }
     }
 
 }
