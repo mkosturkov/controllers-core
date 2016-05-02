@@ -14,21 +14,21 @@ class ControllerTest extends ControllersTestCase
 {   
     private $controller;
     
-    private $queue;
+    private $mainQueue;
     
     private $finalQueue;
     
     public function setUp()
     {
         $this->controller = new Controller();
-        $this->queue = $this->controller->getStartQueueModifier();
+        $this->mainQueue = $this->controller->getMainQueueModifier();
         $this->finalQueue = $this->controller->getFinalQueueModifier();
         $this->exceptionHandlers = $this->controller->getExceptionHandlersCollection();
     }
     
     public function testQueueModifierGettersReturnTypes()
     {
-        foreach (['getStartQueueModifier', 'getFinalQueueModifier'] as $methodName) {
+        foreach (['getMainQueueModifier', 'getFinalQueueModifier'] as $methodName) {
             $this->assertInstanceOf(MiddlewareQueueModifier::class, $this->controller->$methodName());
         }
     }
@@ -48,14 +48,14 @@ class ControllerTest extends ControllersTestCase
     
     public function testStartQueueRun()
     {
-        $result = $this->prepareForRunTest($this->queue, false, [1, 2, 3]);
+        $result = $this->prepareForRunTest($this->mainQueue, false, [1, 2, 3]);
         $this->controller->run();
         $this->checkRunResult($result);
     }
     
     public function testReverseStartQueueRun()
     {
-        $result = $this->prepareForRunTest($this->queue, true, [1, 2, 3]);
+        $result = $this->prepareForRunTest($this->mainQueue, true, [1, 2, 3]);
         $this->controller->run();
         $this->checkRunResult($result);
     }
@@ -76,7 +76,7 @@ class ControllerTest extends ControllersTestCase
     
     public function testStartQueueAndFinalQueueRun()
     {
-        $queueResult = $this->prepareForRunTest($this->queue, false, [1, 2, 3]);
+        $queueResult = $this->prepareForRunTest($this->mainQueue, false, [1, 2, 3]);
         $finalQueueResult = $this->prepareForRunTest($this->finalQueue, false, [4, 5, 6]);
         $this->controller->run();
         $this->checkRunResult([
@@ -163,7 +163,7 @@ class ControllerTest extends ControllersTestCase
         $middleware = $this->makeMiddlewareMock();
         $middleware->expects($this->never())
             ->method('run');
-        $this->queue->append($middleware);
+        $this->mainQueue->append($middleware);
         $this->controller->run();
     }
     
@@ -294,7 +294,7 @@ class ControllerTest extends ControllersTestCase
     
     private function addExceptionInQueue()
     {
-        $this->controller->getStartQueueModifier()->append(
+        $this->controller->getMainQueueModifier()->append(
             $this->makeMiddlewareMockWithCallback(function() {
                 throw new Exception();
             })
@@ -303,7 +303,7 @@ class ControllerTest extends ControllersTestCase
     
     private function appendCallback(callable $callback, MiddlewareQueueModifier $queue = null)
     {
-        $queue = is_null($queue) ? $this->queue : $queue;
+        $queue = is_null($queue) ? $this->mainQueue : $queue;
         $queue->append($this->makeMiddlewareMockWithCallback($callback));
     }
     

@@ -14,9 +14,9 @@ use \Tys\Controllers\Exceptions\AlreadyRunningException;
 class Controller
 {
 
-   private $startQueue;
+   private $mainQueue;
    
-   private $startQueueModfier;
+   private $mainQueueModfier;
     
    private $finalQueue;
    
@@ -32,9 +32,9 @@ class Controller
 
     public function __construct()
     {
-        $this->startQueue = new MiddlewareQueue();
+        $this->mainQueue = new MiddlewareQueue();
         $this->finalQueue = new MiddlewareQueue();
-        $this->startQueueModfier = new MiddlewareQueueModifier($this->startQueue);
+        $this->mainQueueModfier = new MiddlewareQueueModifier($this->mainQueue);
         $this->finalQueueModifier = new MiddlewareQueueModifier($this->finalQueue);
         $this->exceptionHandlers = new ExceptionHandlersCollection();
     }
@@ -43,9 +43,9 @@ class Controller
      * 
      * @return MiddlewareQueueModifier
      */
-    public function getStartQueueModifier()
+    public function getMainQueueModifier()
     {
-        return $this->startQueueModfier;
+        return $this->mainQueueModfier;
     }
     
     /**
@@ -147,9 +147,9 @@ class Controller
     
     private function tryQueueRun()
     {
-        while (!$this->stopFlag && $this->startQueue->hasNext()) {
+        while (!$this->stopFlag && $this->mainQueue->hasNext()) {
             try {
-                $this->runNextMiddleware($this->startQueue);
+                $this->runNextMiddleware($this->mainQueue);
             } catch (\Exception $ex) {
                 $this->stop();
                 $handled = $this->handleException($ex);
