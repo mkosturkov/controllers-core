@@ -21,14 +21,14 @@ class ControllerTest extends ControllersTestCase
     public function setUp()
     {
         $this->controller = new Controller();
-        $this->queue = $this->controller->getQueueModifier();
+        $this->queue = $this->controller->getStartQueueModifier();
         $this->finalQueue = $this->controller->getFinalQueueModifier();
         $this->exceptionHandlers = $this->controller->getExceptionHandlersCollection();
     }
     
     public function testQueueModifierGettersReturnTypes()
     {
-        foreach (['getQueueModifier', 'getFinalQueueModifier'] as $methodName) {
+        foreach (['getStartQueueModifier', 'getFinalQueueModifier'] as $methodName) {
             $this->assertInstanceOf(MiddlewareQueueModifier::class, $this->controller->$methodName());
         }
     }
@@ -38,14 +38,14 @@ class ControllerTest extends ControllersTestCase
         $this->assertInstanceOf(ExceptionHandlersCollection::class, $this->controller->getExceptionHandlersCollection());
     }
     
-    public function testQueueRun()
+    public function testStartQueueRun()
     {
         $result = $this->prepareForRunTest($this->queue, false, [1, 2, 3]);
         $this->controller->run();
         $this->checkRunResult($result);
     }
     
-    public function testReverseQueueRun()
+    public function testReverseStartQueueRun()
     {
         $result = $this->prepareForRunTest($this->queue, true, [1, 2, 3]);
         $this->controller->run();
@@ -66,7 +66,7 @@ class ControllerTest extends ControllersTestCase
         $this->checkRunResult($result);
     }
     
-    public function testQueueAndFinalQueueRun()
+    public function testStartQueueAndFinalQueueRun()
     {
         $queueResult = $this->prepareForRunTest($this->queue, false, [1, 2, 3]);
         $finalQueueResult = $this->prepareForRunTest($this->finalQueue, false, [4, 5, 6]);
@@ -298,7 +298,7 @@ class ControllerTest extends ControllersTestCase
     
     private function addExceptionInQueue()
     {
-        $this->controller->getQueueModifier()->append(
+        $this->controller->getStartQueueModifier()->append(
             $this->makeMiddlewareMockWithCallback(function() {
                 throw new Exception();
             })
