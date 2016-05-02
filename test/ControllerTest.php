@@ -1,6 +1,7 @@
 <?php
 
 use \Tys\Controllers\MiddlewareQueueModifier;
+use \Tys\Controllers\ExceptionHandlersCollection;
 use \Tys\Controllers\Controller;
 use \Tys\Controllers\Exceptions\AlreadyRunningException;
 
@@ -22,6 +23,7 @@ class ControllerTest extends ControllersTestCase
         $this->controller = new Controller();
         $this->queue = $this->controller->getQueueModifier();
         $this->finalQueue = $this->controller->getFinalQueueModifier();
+        $this->exceptionHandlers = $this->controller->getExceptionHandlersCollection();
     }
     
     public function testQueueModifierGettersReturnTypes()
@@ -29,6 +31,11 @@ class ControllerTest extends ControllersTestCase
         foreach (['getQueueModifier', 'getFinalQueueModifier'] as $methodName) {
             $this->assertInstanceOf(MiddlewareQueueModifier::class, $this->controller->$methodName());
         }
+    }
+    
+    public function testGetExceptionHandlersCollection()
+    {
+        $this->assertInstanceOf(ExceptionHandlersCollection::class, $this->controller->getExceptionHandlersCollection());
     }
     
     public function testQueueRun()
@@ -95,8 +102,8 @@ class ControllerTest extends ControllersTestCase
     
     public function testFinalCallbackAfterHandledException()
     {
+        $this->addHandlerForException(Exception::class, function() {});
         $this->addExceptionInQueue();
-        $this->controller->setExceptionHandlerCallback(Exception::class, function() {});
         $ran = false;
         $this->appendCallback(function() use (&$ran) {
             $ran = true;
@@ -167,7 +174,7 @@ class ControllerTest extends ControllersTestCase
     public function testStopOnException()
     {
         $this->addExceptionInQueue();
-        $this->controller->setExceptionHandlerCallback(Exception::class, function() {});
+        $this->addHandlerForException(Exception::class, function() {});
         $this->controller->run();
         $this->assertTrue($this->controller->isStopped());
         
@@ -180,7 +187,7 @@ class ControllerTest extends ControllersTestCase
         $this->appendCallback(function() use (&$ran) {
             $ran = true;
         });
-        $this->controller->setExceptionHandlerCallback(Exception::class, function(Exception $ex, Controller $controller) {
+        $this->addHandlerForException(Exception::class, function(Controller $controller, Exception $ex) {
             $controller->undoStop();
         });
         $this->controller->run();
@@ -194,13 +201,6 @@ class ControllerTest extends ControllersTestCase
         $this->controller->run();
     }
     
-    public function testExceptionHandlerSetterReturningSelf()
-    {
-        $this->assertSame($this->controller, $this->controller->setExceptionHandlerCallback(Exception::class, function() {
-            
-        }));
-    }
-    
     public function testExceptionHandlerBeingTriggered()
     {
         $thrown = new Exception();
@@ -208,7 +208,7 @@ class ControllerTest extends ControllersTestCase
             throw $thrown;
         });
         $cought = null;
-        $this->controller->setExceptionHandlerCallback(Exception::class, function(Exception $e) use (&$cought) {
+        $this->addHandlerForException(Exception::class, function(Controller $controller, Exception $e) use (&$cought) {
             $cought = $e;
         });
         $this->controller->run();
@@ -227,11 +227,11 @@ class ControllerTest extends ControllersTestCase
             throw new InvalidArgumentException();
         };
         $coughtBy = false;
-        $this->controller->setExceptionHandlerCallback(InvalidArgumentException::class, function() use (&$coughtBy) {
+        $this->addHandlerForException(InvalidArgumentException::class, function() use (&$coughtBy) {
             $coughtBy = 'invalid-argument-handler';
         });
         
-        $this->controller->setExceptionHandlerCallback(Exception::class, function() use (&$coughtBy) {
+        $this->addHandlerForException(Exception::class, function() use (&$coughtBy) {
             $coughtBy = 'exception-handler';
         });
         
@@ -253,10 +253,10 @@ class ControllerTest extends ControllersTestCase
     public function testExceptionHandlersPriority()
     {
         $coughtBy = false;
-        $this->controller->setExceptionHandlerCallback(Exception::class, function() use (&$coughtBy) {
+        $this->addHandlerForException(Exception::class, function() use (&$coughtBy) {
             $coughtBy = 'exception-handler';
         });
-        $this->controller->setExceptionHandlerCallback(InvalidArgumentException::class, function() use (&$coughtBy) {
+        $this->addHandlerForException(InvalidArgumentException::class, function() use (&$coughtBy) {
             $coughtBy = 'invalid-argument';
         });
         $this->appendCallback(function() {

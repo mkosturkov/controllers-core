@@ -22,7 +22,7 @@ class Controller
    
    private $finalQueueModifier;
     
-   private $exceptionHandlers = [];
+   private $exceptionHandlers;
     
    private $lastReturnValue;
     
@@ -36,6 +36,7 @@ class Controller
         $this->finalQueue = new MiddlewareQueue();
         $this->queueModfier = new MiddlewareQueueModifier($this->queue);
         $this->finalQueueModifier = new MiddlewareQueueModifier($this->finalQueue);
+        $this->exceptionHandlers = new ExceptionHandlersCollection();
     }
     
     /**
@@ -57,16 +58,12 @@ class Controller
     }
     
     /**
-     * Set exception handler function
      * 
-     * @param string $exceptionName The class name of the exception and its descendants to handle
-     * @param callable $handler The function
-     * @return \Tys\Controllers\Controller Returns self
+     * @return ExceptionHandlersCollection
      */
-    public function setExceptionHandlerCallback($exceptionName, callable $handler)
+    public function getExceptionHandlersCollection()
     {
-        $this->exceptionHandlers[$exceptionName] = $handler;
-        return $this;
+        return $this->exceptionHandlers;
     }
     
     /**
@@ -152,11 +149,9 @@ class Controller
     
     private function handleException(\Exception $exception)
     {
-        foreach ($this->exceptionHandlers as $exceptionType => $handler) {
-            if (is_a($exception, $exceptionType)) {
-                $handler($exception, $this);
-                return true;
-            }
+        if (($handler = $this->exceptionHandlers->getHandlerForException($exception))) {
+            $handler->handle($this, $exception);
+            return true;
         }
         return false;
     }
