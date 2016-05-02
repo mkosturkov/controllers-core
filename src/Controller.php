@@ -149,8 +149,7 @@ class Controller
     {
         while (!$this->stopFlag && $this->startQueue->hasNext()) {
             try {
-                $middleware = $this->startQueue->getNext();
-                $middleware->run($this);
+                $this->runNextMiddleware($this->startQueue);
             } catch (\Exception $ex) {
                 $this->stop();
                 $handled = $this->handleException($ex);
@@ -171,9 +170,14 @@ class Controller
     private function runFinalQueue()
     {
         while ($this->finalQueue->hasNext()) {
-            $middleware = $this->finalQueue->getNext();
-            $middleware->run($this);
+            $this->runNextMiddleware($this->finalQueue);
         }
+    }
+    
+    private function runNextMiddleware(MiddlewareQueue $queue)
+    {
+        $middleware = $queue->getNext();
+        $middleware->run($this);
     }
 
 }
