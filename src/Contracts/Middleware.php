@@ -16,7 +16,6 @@ interface Middleware
      * This method will be called when the middleware is fired.
      * 
      * @param Controller $controller The controller instance running
-     * @return mixed
      */
     public function run(Controller $controller);
 }

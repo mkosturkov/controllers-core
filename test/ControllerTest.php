@@ -38,6 +38,14 @@ class ControllerTest extends ControllersTestCase
         $this->assertInstanceOf(ExceptionHandlersCollection::class, $this->controller->getExceptionHandlersCollection());
     }
     
+    public function testSetGetData()
+    {
+        foreach (['some value', 'other value'] as $value) {
+            $this->assertSame($this->controller, $this->controller->setData($value));
+            $this->assertEquals($value, $this->controller->getData());
+        }
+    }
+    
     public function testStartQueueRun()
     {
         $result = $this->prepareForRunTest($this->queue, false, [1, 2, 3]);
@@ -110,18 +118,6 @@ class ControllerTest extends ControllersTestCase
         }, $this->finalQueue);
         $this->controller->run();
         $this->assertTrue($ran);
-    }
-    
-    public function testLastValue()
-    {
-        $middleware = $this->makeMiddlewareMock();
-        $returnValue = 'test runned';
-        $middleware->expects($this->once())
-            ->method('run')
-            ->willReturn($returnValue);
-        $this->queue->append($middleware);
-        $this->controller->run();
-        $this->assertEquals($returnValue, $this->controller->getLastReturnValue());
     }
     
     public function testIsRunning()

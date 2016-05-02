@@ -23,8 +23,8 @@ class Controller
    private $finalQueueModifier;
     
    private $exceptionHandlers;
-    
-   private $lastReturnValue;
+   
+   private $data;
     
    private $stopFlag = false;
     
@@ -86,6 +86,29 @@ class Controller
     }
     
     /**
+     * Set arbitrary data to share with other middleware
+     * 
+     * @param mixed $result
+     * @return this
+     */
+    public function setData($data)
+    {
+        $this->data = $data;
+        return $this;
+    }
+    
+    /**
+     * Returns the last data set with Controller::setData()
+     * 
+     * @see Controller::setData()
+     * @return mixed
+     */
+    public function getData()
+    {
+        return $this->data;
+    }
+    
+    /**
      * Returns true is the run method had been called
      * and has not yet completed, false otherwise.
      * 
@@ -122,23 +145,12 @@ class Controller
         return $this->stopFlag;
     }
     
-    /**
-     * Returns the return value of the
-     * last executed middleware
-     * 
-     * @return mixed
-     */
-    public function getLastReturnValue()
-    {
-        return $this->lastReturnValue;
-    }
-    
     private function tryQueueRun()
     {
         while (!$this->stopFlag && $this->startQueue->hasNext()) {
             try {
                 $middleware = $this->startQueue->getNext();
-                $this->lastReturnValue = $middleware->run($this);
+                $middleware->run($this);
             } catch (\Exception $ex) {
                 $this->stop();
                 $handled = $this->handleException($ex);
