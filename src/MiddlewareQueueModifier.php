@@ -6,7 +6,7 @@ use \Tys\Controllers\Contracts\Middleware;
 
 /**
  * The class is used to wrap around MiddlewareQueue
- * and allow only appending and prepending to it.
+ * and hide methods that read from it.
  *
  * @author Milko Kosturkov <mkosturkov@gmail.com>
  */
@@ -41,5 +41,15 @@ class MiddlewareQueueModifier
     {
         $this->queue->prepend($middleware);
         return $this;
+    }
+    
+    /**
+     * Flushes the queue
+     * @return this
+     */
+    public function flush()
+    {
+       $this->queue->flush();
+       return $this;
     }
 }

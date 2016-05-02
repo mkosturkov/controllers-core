@@ -29,6 +29,13 @@ class MiddlewareQueueModifierTest extends ControllersTestCase
         $this->callModifierMethod('prepend');
     }
     
+    public function testFlushMethod()
+    {
+        $this->queue->expects($this->once())
+            ->method('flush');
+        $this->assertSame($this->modifier, $this->modifier->flush());
+    }
+    
     private function callModifierMethod($method)
     {
         $middleware = $this->makeMiddlewareMock();
