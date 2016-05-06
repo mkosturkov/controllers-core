@@ -2,7 +2,6 @@
 
 namespace Tys\Controllers;
 
-use \Tys\Controllers\Contracts\Middleware;
 use \Tys\Controllers\Exceptions\AlreadyRunningException;
 
 /**
