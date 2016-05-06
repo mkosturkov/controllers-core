@@ -63,10 +63,10 @@ class MiddlewareQueue
      */
     public function getNext()
     {
-        if ($this->hasNext()) {
-            return array_shift($this->middlewareItems);
+        if (!$this->hasNext()) {
+            throw new \OutOfBoundsException('The queue is empty!');
         }
-        throw new \OutOfBoundsException('The queue is empty!');
+        return array_shift($this->middlewareItems);
     }
     
     /**

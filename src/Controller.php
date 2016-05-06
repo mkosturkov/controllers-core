@@ -158,7 +158,7 @@ class Controller
         }
         $this->runningFlag = true;
         
-        $queueRunResult = $this->tryQueueRun();
+        $queueRunResult = $this->tryMainQueueRun();
         $this->runFinalQueue();
         
         if (is_array($queueRunResult) && !$queueRunResult['handled']) {
@@ -167,9 +167,9 @@ class Controller
         $this->runningFlag = false;
     }
     
-    private function tryQueueRun()
+    private function tryMainQueueRun()
     {
-        while (!$this->stopFlag && $this->mainQueue->hasNext()) {
+        while (!$this->isStopped() && $this->mainQueue->hasNext()) {
             try {
                 $this->runNextMiddleware($this->mainQueue);
             } catch (\Exception $ex) {
