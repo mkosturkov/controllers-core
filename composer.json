@@ -1,6 +1,6 @@
 {
-    "name": "tys/controllers",
-    "description": "Provides simple controller framework",
+    "name": "tys/controllers-core",
+    "description": "Provides the core for a simple controller framework",
     "license": "MIT",
     "authors": [
         {
