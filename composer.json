@@ -1,11 +1,12 @@
 {
     "name": "tys/controllers",
     "description": "Provides simple controller framework",
-    "license": "GPL-3.0+",
+    "license": "MIT",
     "authors": [
         {
             "name": "Milko Kosturkov",
-            "email": "mkosturkov@gmail.com"
+            "email": "mkosturkov@gmail.com",
+            "role": "Developer"
         }
     ],
     "require": {
