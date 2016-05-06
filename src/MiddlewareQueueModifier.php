@@ -14,13 +14,16 @@ class MiddlewareQueueModifier
 {
     private $queue;
     
+    /**
+     * @param MiddlewareQueue $queue The queue to access
+     */
     public function __construct(MiddlewareQueue $queue)
     {
         $this->queue = $queue;
     }
     
     /**
-     * Appends a middleware item at the end of the queue
+     * Appends a middleware item to the end of the queue
      * 
      * @param Middleware $middleware
      * @return this
@@ -32,7 +35,7 @@ class MiddlewareQueueModifier
     }
     
     /**
-     * Prepends a middleware item in the beggining of the queue
+     * Prepends a middleware item to the beggining of the queue
      * 
      * @param Middleware $middleware
      * @return this
@@ -44,7 +47,8 @@ class MiddlewareQueueModifier
     }
     
     /**
-     * Flushes the queue
+     * Expties the queue
+     * 
      * @return this
      */
     public function flush()

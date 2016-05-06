@@ -5,7 +5,7 @@ namespace Tys\Controllers\Contracts;
 use \Tys\Controllers\Controller;
 
 /**
- * Interface to implement for objects used as middleware
+ * Interface to implement for objects used as middleware.
  * 
  * @author Milko Kosturkov <mkosturkov@gmail.com>
  */

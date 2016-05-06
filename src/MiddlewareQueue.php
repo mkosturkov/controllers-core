@@ -32,7 +32,8 @@ class MiddlewareQueue
     }
     
     /**
-     * Appends a middleware item at the end of the queue
+     * Appends a middleware item to the end of the queue
+     * 
      * @param Middleware $middleware
      * @return this
      */
@@ -43,7 +44,8 @@ class MiddlewareQueue
     }
     
     /**
-     * Prepends a middleware item in the beggining of the queue
+     * Prepends a middleware item to the beggining of the queue
+     * 
      * @param Middleware $middleware
      * @return this
      */
@@ -55,6 +57,7 @@ class MiddlewareQueue
 
     /**
      * Returns the next middleware item in the queue
+     * 
      * @return Middleware
      * @throws \OutOfBoundsException When the queue is empty
      */
@@ -68,6 +71,7 @@ class MiddlewareQueue
     
     /**
      * Empties the queue
+     * 
      * @return this
      */
     public function flush()

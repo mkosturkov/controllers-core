@@ -14,13 +14,13 @@ class ExceptionHandlersCollection
     private $handlersMap = [];
     
     /**
-     * Adds and ExceptionHandler to the collection.
+     * Adds an ExceptionHandler to the collection.
      * If an ExceptionHandler handling the same exception has already been
      * added, the current one is being ignored.
+     * Order in which the handlers are added is preserved.
      * 
      * @param ExceptionHandler $handler
      * @return this
-     * @see ExceptionHandler null if there was no suitable handler
      */
     public function add(ExceptionHandler $handler)
     {
@@ -32,11 +32,13 @@ class ExceptionHandlersCollection
     }
     
     /**
-     * Returns the first found handler able to handle the passed exception.
+     * Returns the first added handler that can handle exceptions
+     * that are instances of the class of the exception passed as an argument
+     * or instances of any of its parents.
      * 
+     * @see ExceptionHandlersCollection::add()
      * @param \Exception $exception
      * @return ExceptionHandler
-     * @see ExceptionHandler
      */
     public function getHandlerForException(\Exception $exception)
     {

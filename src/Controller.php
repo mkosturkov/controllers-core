@@ -6,8 +6,21 @@ use \Tys\Controllers\Contracts\Middleware;
 use \Tys\Controllers\Exceptions\AlreadyRunningException;
 
 /**
- * Base class for application controllers.
- * Provides functionality for running middleware.
+ * The class is responsible for seqeuntially
+ * running the middleware in the middleware queues.
+ * It holds two of them - main and final.
+ * The main queue is run first. Exceptions thrown from
+ * middleware in the main queue are cought and can be handled
+ * if appropriate exception handler had been provided.
+ * If no appropriate handler is found, the exception will be
+ * rethrown after the final queue has executed.
+ * When an exception is cought from the main queue
+ * execution of the queue is stopped. It may be resumed
+ * by the handler.
+ * After execution of the main queue has finished,
+ * either by exception or because all middleware had been run,
+ * middleware in the final queue is executed. If any exceptions are thrown
+ * during that time, they won't be handled in any way by the Controller object.
  *
  * @author Milko Kosturkov <mkosturkov@gmail.com>
  */
@@ -40,7 +53,8 @@ class Controller
     }
     
     /**
-     * 
+     * Returns a modifier for the main middleware queue.
+     *  
      * @return MiddlewareQueueModifier
      */
     public function getMainQueueModifier()
@@ -49,6 +63,7 @@ class Controller
     }
     
     /**
+     * Returns a modifier for the final middleware queue.
      * 
      * @return MiddlewareQueueModifier
      */
@@ -58,6 +73,7 @@ class Controller
     }
     
     /**
+     * Returns the exceptions handlers collection.
      * 
      * @return ExceptionHandlersCollection
      */
@@ -67,28 +83,9 @@ class Controller
     }
     
     /**
-     * Run all the middleware available
-     */
-    public function run()
-    {
-        if ($this->isRunning()) {
-            throw new AlreadyRunningException('The controller is currently running!');
-        }
-        $this->runningFlag = true;
-        
-        $queueRunResult = $this->tryQueueRun();
-        $this->runFinalQueue();
-        
-        if (is_array($queueRunResult) && !$queueRunResult['handled']) {
-            throw $queueRunResult['exception'];
-        }
-        $this->runningFlag = false;
-    }
-    
-    /**
      * Set arbitrary data to share with other middleware
      * 
-     * @param mixed $result
+     * @param mixed $data
      * @return this
      */
     public function setData($data)
@@ -109,9 +106,10 @@ class Controller
     }
     
     /**
-     * Returns true is the run method had been called
+     * Returns true if the run method had been called
      * and has not yet completed, false otherwise.
      * 
+     * @see Controller::run()
      * @return bool
      */
     public function isRunning()
@@ -120,7 +118,8 @@ class Controller
     }
     
     /**
-     * Stop the execution of the middleware
+     * Stop further execution of middleware
+     * in the main queue
      */
     public function stop()
     {
@@ -129,6 +128,7 @@ class Controller
     
     /**
      * Continue execution of middleware
+     * in the main queue
      */
     public function undoStop()
     {
@@ -136,13 +136,35 @@ class Controller
     }
     
     /**
-     * Check wether the middleware execution had been stopped
+     * Check wether the middleware execution
+     * in the main queue had been stopped
      * 
      * @return bool
      */
     public function isStopped()
     {
         return $this->stopFlag;
+    }
+    
+    /**
+     * Run all the middleware available
+     * 
+     * @throws AlreadyRunningException When the method is called before it has finished executing
+     */
+    public function run()
+    {
+        if ($this->isRunning()) {
+            throw new AlreadyRunningException('The controller is currently running!');
+        }
+        $this->runningFlag = true;
+        
+        $queueRunResult = $this->tryQueueRun();
+        $this->runFinalQueue();
+        
+        if (is_array($queueRunResult) && !$queueRunResult['handled']) {
+            throw $queueRunResult['exception'];
+        }
+        $this->runningFlag = false;
     }
     
     private function tryQueueRun()
